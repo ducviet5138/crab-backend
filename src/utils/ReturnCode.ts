@@ -8,10 +8,10 @@ export const RET_CODE = {
 };
 
 export const RET_MSG = {
-    SUCCESS: 'Success',
-    ERROR: 'Internal server error',
-    UNAUTHORIZED: 'Unauthorized',
-    NOT_FOUND: 'Not found',
-    FORBIDDEN: 'Forbidden',
-    BAD_REQUEST: 'Bad request',
+    SUCCESS: "Success",
+    ERROR: "Internal server error",
+    UNAUTHORIZED: "Unauthorized",
+    NOT_FOUND: "Not found",
+    FORBIDDEN: "Forbidden",
+    BAD_REQUEST: "Bad request",
 };

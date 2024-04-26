@@ -1,4 +1,4 @@
-import { RET_CODE, RET_MSG } from './ReturnCode';
+import { RET_CODE, RET_MSG } from "./ReturnCode";
 
 export default class BaseResponse {
     retCode: number;
