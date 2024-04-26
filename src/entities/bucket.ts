@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const BucketSchema = new mongoose.Schema(
+const Schema = new mongoose.Schema(
     {
         fileName: {
             type: String,
@@ -11,4 +11,4 @@ const BucketSchema = new mongoose.Schema(
     }
 );
 
-export const Bucket = mongoose.model('Bucket', BucketSchema, 'buckets');
+export const Bucket = mongoose.model("Bucket", Schema, "buckets");

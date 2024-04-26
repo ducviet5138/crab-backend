@@ -1,9 +1,9 @@
-import * as multer from 'multer';
-import { Bucket } from '../entities';
+import * as multer from "multer";
+import { Bucket } from "../entities";
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, './my_bucket/');
+        cb(null, "./my_bucket/");
     },
     filename: async (req, file, cb) => {
         const bucket = new Bucket({
