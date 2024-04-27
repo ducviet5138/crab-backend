@@ -1,24 +1,25 @@
 import mongoose from "mongoose";
 
+const pointSchema = new mongoose.Schema({
+    type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point",
+    },
+    coordinates: {
+        type: [Number],
+        required: true,
+    },
+});
+
 const Schema = new mongoose.Schema(
     {
         address: {
             type: String,
         },
         location: {
-            type: {
-                type: String,
-                enum: ["Point"],
-                default: "Point",
-            },
-            coordinates: {
-                lat: {
-                    type: Number,
-                },
-                long: {
-                    type: Number,
-                },
-            },
+            type: pointSchema,
+            index: "2dsphere",
         },
     },
     {
