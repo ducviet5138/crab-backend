@@ -4,9 +4,11 @@ import * as express from 'express';
 import 'reflect-metadata';
 import databaseInitialize from './app-data-src';
 import 'module-alias/register';
+import * as cors from 'cors';
 
 const app = express();
 const port = 3000;
+app.use(cors());
 app.use(express.json());
 
 const startServer = async () => {
@@ -32,24 +34,27 @@ import { RET_CODE } from '@/utils/ReturnCode';
 import * as jwt from 'jsonwebtoken';
 
 // Whitelist all as default
-const whitelist = [
-    '/'
-];
+// const whitelist = [
+//     '/'
+// ];
 
 // Middleware to check JWT token
 app.use((req: Request, res: Response, next) => {
     // Check if route is in whitelist
-    if (whitelist.find((path) => req.originalUrl.includes(path))) {
-        next();
-        return;
-    }
+    // if (whitelist.find((path) => req.originalUrl.includes(path))) {
+    //     next();
+    //     return;
+    // }
+
+    next();
+    return;
 
     const token = req.headers['x-access-token'];
     
     // Check if token is provided
     if (!token) {
         const response = new BaseResponse(RET_CODE.UNAUTHORIZED, false, 'No token provided');
-        res.json(response.getResponse());
+        res.status(response.getRetCode()).json(response.getResponse());
         return;
     }
 
@@ -57,7 +62,7 @@ app.use((req: Request, res: Response, next) => {
     jwt.verify(token as string, process.env.JWT_SECRET, (err: any) => {
         if (err) {
             const response = new BaseResponse(RET_CODE.UNAUTHORIZED, false, 'Token is invalid');
-            res.json(response.getResponse());
+            res.status(response.getRetCode()).json(response.getResponse());
         } else {
             next();
         }

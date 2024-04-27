@@ -16,6 +16,12 @@ const Schema = new mongoose.Schema(
         name: {
             type: String,
         },
+        distance: {
+            type: Number,
+        },
+        fare: {
+            type: Number,
+        }
     },
     {
         versionKey: false,

@@ -8,6 +8,9 @@ const Schema = new mongoose.Schema(
         phone: {
             type: String,
         },
+        password: {
+            type: String,
+        },
         role: {
             type: String,
             enum: ["admin", "customer", "driver", "staff"],
