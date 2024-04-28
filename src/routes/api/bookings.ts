@@ -36,7 +36,7 @@ router.patch("/", async (req: Request, res: Response) => {
 router.get("/", async (req: Request, res: Response) => {
     let response = null;
     try {
-        response = await BookingService.list(req);
+        response = await BookingService.list();
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }

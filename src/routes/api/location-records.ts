@@ -36,7 +36,7 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/unresolved-list', async (req: Request, res: Response) => {
     let response = null;
     try {
-        response = await LocationRecordsService.listUnresolved(req);
+        response = await LocationRecordsService.listUnresolved();
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }

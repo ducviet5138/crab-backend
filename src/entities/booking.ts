@@ -23,6 +23,10 @@ const Schema = new mongoose.Schema(
             enum: ["pending", "accepted", "rejected", "canceled", "completed"],
             default: "pending",
         },
+        vehicle: {
+            type: String,
+            enum: ["car", "motorbike"],
+        },
     },
     {
         versionKey: false,

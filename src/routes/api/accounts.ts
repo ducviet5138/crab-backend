@@ -7,9 +7,9 @@ import AccountService from '@/services/accounts';
 
 const router = Express.Router();
 
-// POST: /api/accounts
+// POST: /api/accounts/sign-up
 // Desc: Register an account
-router.post('/', async (req: Request, res: Response) => {
+router.post('/sign-up', async (req: Request, res: Response) => {
     let response = null;
     try {
         response = await AccountService.register(req);
@@ -19,9 +19,9 @@ router.post('/', async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse()); 
 });
 
-// GET: /api/accounts
+// GET: /api/accounts/sign-in
 // Desc: Login
-router.get('/', async (req: Request, res: Response) => {
+router.post('/sign-in', async (req: Request, res: Response) => {
     let response = null;
     try {
         response = await AccountService.login(req);

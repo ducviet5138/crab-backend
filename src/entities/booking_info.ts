@@ -21,7 +21,7 @@ const Schema = new mongoose.Schema(
         },
         fare: {
             type: Number,
-        }
+        },
     },
     {
         versionKey: false,
