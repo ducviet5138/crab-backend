@@ -80,7 +80,7 @@ class BookingService {
         }
     }
 
-    async list(req: Request) {
+    async list() {
         try {
             const data = await Booking.find().populate("info").populate("orderedBy").populate("driver");
 
@@ -92,17 +92,16 @@ class BookingService {
 
     async createByStaff(req: Request) {
         try {
-            const { ordered_by, pick_up, destination, phone, name } = req.body;
+            const { ordered_by, pick_up, destination, phone, name, vehicle } = req.body;
 
-            if (!ordered_by || !pick_up || !destination || !phone || !name) {
+            if (!ordered_by || !pick_up || !destination || !destination.address || !phone || !name) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
             }
 
             let pickUpId = pick_up._id ? objectIdConverter(pick_up._id) : "";
             let destinationId = destination._id ? objectIdConverter(destination._id) : "";
 
-            if (!pickUpId)
-            {
+            if (!pickUpId) {
                 const newPickUpLocationRecord = new LocationRecord({
                     address: pick_up.address as string,
                 });
@@ -112,8 +111,7 @@ class BookingService {
                 pickUpId = data._id;
             }
 
-            if (!destinationId)
-            {
+            if (!destinationId) {
                 const newDestinationLocationRecord = new LocationRecord({
                     address: destination.address as string,
                 });
@@ -135,6 +133,7 @@ class BookingService {
             const data = new Booking({
                 info: bookingInfo._id,
                 orderedBy: objectIdConverter(ordered_by),
+                vehicle,
             });
 
             await data.save();

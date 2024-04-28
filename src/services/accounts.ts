@@ -5,11 +5,15 @@ import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 import { User } from "@/entities";
 
 import hashPassword from "@/utils/HashPassword";
+import generateJWTToken from "@/utils/GenerateJWTToken";
 
 class AccountService {
     async register(req: Request) {
         try {
-            const { phone, password, role } = req.body;
+            const { phone, password } = req.body;
+            let { role } = req.body;
+
+            if (!role) role = "customer";
 
             const duplicatedAccount = await User.findOne({ phone });
 
@@ -40,19 +44,25 @@ class AccountService {
     async login(req: Request) {
         try {
             const { phone, password } = req.body;
+            let { role } = req.body;
 
-            const account = await User.findOne({ phone });
+            if (!role) role = "customer";
+
+            const account = await User.findOne({
+                phone,
+                role,
+                password: hashPassword(password),
+            });
 
             if (!account) {
-                return new BaseResponse(RET_CODE.ERROR, false, "Account not found");
+                return new BaseResponse(RET_CODE.ERROR, false, "Phone number or password is invalid");
             }
 
-            if (account.password !== hashPassword(password)) {
-                return new BaseResponse(RET_CODE.ERROR, false, "Invalid password");
-            }
+            // Return JWT token
+            const token = generateJWTToken({ _id: account._id.toString() });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
-                _id: account._id,
+                token,
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);

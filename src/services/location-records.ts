@@ -67,7 +67,6 @@ class LocationRecordsService {
             }
 
             const data = await LocationRecord.find(query).then((res) => {
-                console.log(res);
                 return res;
             });
 
@@ -79,7 +78,7 @@ class LocationRecordsService {
         }
     }
 
-    async listUnresolved(req: Request) {
+    async listUnresolved() {
         try {
             const data = await LocationRecord.find({ location: { $exists: false } });
 
