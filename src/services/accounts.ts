@@ -68,6 +68,68 @@ class AccountService {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
     }
+
+
+    async loginMobile(req: Request) {
+        try {
+            const { phone } = req.body;
+            let { role } = req.body;
+
+            if (!role) role = "customer";
+
+            const duplicatedAccount = await User.findOne({ phone });
+
+            if (duplicatedAccount) {
+                // return new BaseResponse(RET_CODE.BAD_REQUEST, false, "This phone number is already registered");
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    duplicatedAccount
+                });
+            }
+
+            if (role && (role === "admin" || role === "staff")) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid role");
+            }
+
+            const data = new User({
+                phone,
+                password: "",
+                role,
+            });
+
+            await data.save();
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                data
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getUserData(req: Request) {
+        try {
+            const { phone } = req.body;
+            let { role } = req.body;
+
+            if (!role) role = "customer";
+
+            const account = await User.findOne({
+                phone,
+                role
+            }).select("-password");
+
+            if (!account) {
+                return new BaseResponse(RET_CODE.ERROR, false, "Phone number is invalid");
+            }
+
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                account: account,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
 }
 
 export default new AccountService();
