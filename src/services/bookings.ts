@@ -6,7 +6,35 @@ import { Booking } from "@/entities/booking";
 import { BookingInfo, LocationRecord } from "@/entities";
 import objectIdConverter from "@/utils/ObjectIdConverter";
 
+import BookingInfoService from "./booking-infos";
+
 class BookingService {
+    async flatCreate(req: Request) {
+        try {
+            const { ordered_by } = req.body;
+
+            if (!ordered_by) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking_info = await BookingInfoService.createWithLatLng(req);
+
+            const data = new Booking({
+                info: objectIdConverter(booking_info.data._id),
+                // orderedBy: objectIdConverter(ordered_by),
+            });
+
+            await data.save();
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                _id: data._id,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+
     async create(req: Request) {
         try {
             const { booking_info, ordered_by } = req.body;
