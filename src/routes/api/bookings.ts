@@ -12,7 +12,7 @@ const router = Express.Router();
 router.post("/", async (req: Request, res: Response) => {
     let response = null;
     try {
-        response = await BookingService.create(req);
+        response = await BookingService.flatCreate(req);
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }
