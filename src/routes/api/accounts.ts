@@ -31,19 +31,6 @@ router.post('/sign-in', async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse()); 
 });
 
-// GET: /api/accounts/sign-in-mobile
-// Desc: Login user in mobile app
-router.post('/sign-in-mobile', async (req: Request, res: Response) => {
-    let response = null;
-    try {
-        response = await AccountService.loginMobile(req);
-    } catch (_: any) {
-        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
-    }
-    res.status(response.getRetCode()).json(response.getResponse()); 
-})
-
-
 // GET: /api/accounts/get-user
 // Desc: Register in mobile app
 router.post('/get-user', async (req: Request, res: Response) => {
@@ -54,5 +41,5 @@ router.post('/get-user', async (req: Request, res: Response) => {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }
     res.status(response.getRetCode()).json(response.getResponse()); 
-})
+});
 export default router;

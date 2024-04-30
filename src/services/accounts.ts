@@ -15,9 +15,9 @@ class AccountService {
 
             if (!role) role = "customer";
 
-            const duplicatedAccount = await User.findOne({ phone });
+            const existedAccount = await User.findOne({ phone });
 
-            if (duplicatedAccount) {
+            if (existedAccount) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "This phone number is already registered");
             }
 
@@ -69,36 +69,54 @@ class AccountService {
         }
     }
 
-
-    async loginMobile(req: Request) {
+    async firebaseAuth(req: Request) {
         try {
-            const { phone } = req.body;
-            let { role } = req.body;
+            const { UID } = req.body;
+            let { role, phone } = req.body;
+
+            if (!phone || !UID) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Missing phone or UID");
+            }
 
             if (!role) role = "customer";
 
-            const duplicatedAccount = await User.findOne({ phone });
+            // Format phone number from +84xxxxxxxxx to 0xxxxxxxxx
+            if (phone.startsWith("+84")) phone = "0" + phone.slice(3);
 
-            if (duplicatedAccount) {
-                // return new BaseResponse(RET_CODE.BAD_REQUEST, false, "This phone number is already registered");
+            const existedAccount = await User.findOne({ phone });
+
+            // Update UID for existed account and return jwt token to client
+            if (existedAccount) {
+                existedAccount.firebaseUID = UID;
+                await existedAccount.save();
+
+                // Return JWT token
+                const token = generateJWTToken({ _id: existedAccount._id.toString() });
+
                 return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
-                    duplicatedAccount,
-                    newUser: false
+                    existedAccount,
+                    newUser: false,
+                    token,
+
                 });
             }
 
-
             const data = new User({
                 phone,
-                password: "",
+                password: hashPassword(Math.random().toString(36).substring(8)), // Generate random password for account created by Firebase
                 role,
+                firebaseUID: UID,
             });
 
             await data.save();
 
+            // Return JWT token
+            const token = generateJWTToken({ _id: data._id.toString() });
+
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 data,
-                newUser: true
+                newUser: true,
+                token
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
@@ -114,13 +132,12 @@ class AccountService {
 
             const account = await User.findOne({
                 phone,
-                role
+                role,
             }).select("-password");
 
             if (!account) {
                 return new BaseResponse(RET_CODE.ERROR, false, "Phone number is invalid");
             }
-
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 account: account,
