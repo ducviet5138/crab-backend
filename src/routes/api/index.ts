@@ -4,6 +4,7 @@ import accountRoute from './accounts';
 import locationRecordRoute from './location-records';
 import staffRoute from './staff';
 import bookingsRoute from './bookings';
+import feeRoute from './fee';
 
 const router = Express.Router();
 
@@ -12,6 +13,7 @@ router.use('/accounts', accountRoute);
 router.use('/location-records', locationRecordRoute);
 router.use('/staff', staffRoute);
 router.use('/bookings', bookingsRoute);
+router.use('/fee', feeRoute);
 
 
 export default router;

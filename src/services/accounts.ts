@@ -82,13 +82,11 @@ class AccountService {
             if (duplicatedAccount) {
                 // return new BaseResponse(RET_CODE.BAD_REQUEST, false, "This phone number is already registered");
                 return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
-                    duplicatedAccount
+                    duplicatedAccount,
+                    newUser: false
                 });
             }
 
-            if (role && (role === "admin" || role === "staff")) {
-                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid role");
-            }
 
             const data = new User({
                 phone,
@@ -99,7 +97,8 @@ class AccountService {
             await data.save();
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
-                data
+                data,
+                newUser: true
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
