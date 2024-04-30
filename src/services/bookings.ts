@@ -34,7 +34,6 @@ class BookingService {
         }
     }
 
-
     async create(req: Request) {
         try {
             const { booking_info, ordered_by } = req.body;

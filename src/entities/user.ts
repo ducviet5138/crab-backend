@@ -19,6 +19,9 @@ const Schema = new mongoose.Schema(
         avatar: {
             type: String,
         },
+        firebaseUID: {
+            type: String,
+        },
     },
     {
         versionKey: false,
