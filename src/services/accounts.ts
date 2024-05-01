@@ -6,6 +6,7 @@ import { User } from "@/entities";
 
 import hashPassword from "@/utils/HashPassword";
 import generateJWTToken from "@/utils/GenerateJWTToken";
+import objectIdConverter from "@/utils/ObjectIdConverter";
 
 class AccountService {
     async register(req: Request) {
@@ -59,7 +60,12 @@ class AccountService {
             }
 
             // Return JWT token
-            const token = generateJWTToken({ _id: account._id.toString() });
+            const token = generateJWTToken({ 
+                _id: account._id.toString(),
+                phone: account.phone,
+                name: account.name,
+                role: account.role,
+            });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 token,
@@ -91,7 +97,12 @@ class AccountService {
                 await existedAccount.save();
 
                 // Return JWT token
-                const token = generateJWTToken({ _id: existedAccount._id.toString() });
+                const token = generateJWTToken({ 
+                    _id: existedAccount._id.toString(),
+                    phone: existedAccount.phone,
+                    name: existedAccount.name,
+                    role: existedAccount.role,
+                });
 
                 return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                     existedAccount,
@@ -111,7 +122,12 @@ class AccountService {
             await data.save();
 
             // Return JWT token
-            const token = generateJWTToken({ _id: data._id.toString() });
+            const token = generateJWTToken({ 
+                _id: existedAccount._id.toString(),
+                phone: existedAccount.phone,
+                name: existedAccount.name,
+                role: existedAccount.role,
+            });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 data,
@@ -141,6 +157,41 @@ class AccountService {
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 account: account,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async update(req: Request) {
+        try {
+            const { _id, name, avatar } = req.body;
+            let { role } = req.body;
+
+            if (!role) role = "customer";
+
+            const account = await User.findById(objectIdConverter(_id));
+
+            if (!account) {
+                return new BaseResponse(RET_CODE.ERROR, false, "Phone number is invalid");
+            }
+
+            // Update data if it's not empty
+            if (name) account.name = name;
+            if (avatar) account.avatar = avatar;
+
+            await account.save();
+
+            // Get token
+            const token = generateJWTToken({ 
+                _id: account._id.toString(),
+                phone: account.phone,
+                name: account.name,
+                role: account.role,
+            });
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                token,
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
