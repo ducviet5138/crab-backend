@@ -105,10 +105,7 @@ class AccountService {
                 });
 
                 return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
-                    existedAccount,
-                    newUser: false,
                     token,
-
                 });
             }
 
@@ -130,8 +127,6 @@ class AccountService {
             });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
-                data,
-                newUser: true,
                 token
             });
         } catch (_: any) {
