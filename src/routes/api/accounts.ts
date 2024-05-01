@@ -42,4 +42,17 @@ router.post('/get-user', async (req: Request, res: Response) => {
     }
     res.status(response.getRetCode()).json(response.getResponse()); 
 });
+
+
+// PATCH: /api/accounts/
+router.patch('/', async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await AccountService.update(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse()); 
+});
+
 export default router;
