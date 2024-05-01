@@ -6,11 +6,11 @@ export class CarEconomyStrategy implements IFeeStrategy {
         if (distance <= 2)
             return  distance*267000;
         else
-            return 2*267000 + (distance-2)*91000
+            return 2*26700 + (distance-2)*9100
     }
 
     getName(): string {
-        return 'Car economy';
+        return 'Car Economy';
     }
 
     getNumSeat(): number {
@@ -18,6 +18,6 @@ export class CarEconomyStrategy implements IFeeStrategy {
     }
 
     getTypeVehicle(): string {
-        return 'Car';
+        return 'car';
     }
 }

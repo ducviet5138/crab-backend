@@ -26,9 +26,31 @@ export class FeeDriving {
         this.feeStrategy = feeStrategy;
     }
 
-    getAllFeeStrategy(): {}[]  {
+    getAllFeeStrategy(): 
+    {    
+        fee: number;
+        typeVehicle: string;
+        typeName: string;
+        numSeat: number;
+    }[]  
+    {
         let res = this.feeManager.getAllFeeStrategy(this.distance);   
         return res;   
+    }
+
+    getFeeStrategy(service: string): {   
+        fee: number;
+        typeVehicle: string;
+        typeName: string;
+        numSeat: number;
+    }{
+        let res = this.feeManager.getAllFeeStrategy(this.distance);
+        for (let i = 0; i < res.length; i++) {
+            if (res[i].typeName == service) {
+                return res[i];
+            }
+        }
+        return {fee: 0, typeVehicle: '', typeName: '', numSeat: 0};
     }
 
     calculateFee(): number {

@@ -25,8 +25,11 @@ const Schema = new mongoose.Schema(
         },
         vehicle: {
             type: String,
-            enum: ["car", "motorbike"],
+            enum: ["car", "motorbike"]
         },
+        service: {
+            type: String
+        }
     },
     {
         versionKey: false,
