@@ -23,6 +23,11 @@ class FeeService {
     });
 
   }
+
+  getFee(req: Request) {
+    const {service} = req.body;
+    
+  }
 }
 
 export default new FeeService();

@@ -2,12 +2,14 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord } from "@/entities";
+import { BookingInfo, LocationRecord, User } from "@/entities";
+import accounts from "./accounts";
 
 class BookingInfoService {
+
     async createWithLatLng(req: Request) {
         try {
-            const { pLat, pLng, dLat, dLng, pAddress, dAddress, name, phone } = req.body;
+            const { pLat, pLng, dLat, dLng, pAddress, dAddress, name, phone, fee } = req.body;
 
             if (!pLat || !pLng || !dLat || !dLng || !pAddress || !dAddress || !name || !phone) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
@@ -65,10 +67,10 @@ class BookingInfoService {
                 phone: phone,
                 pickup: pLocation,
                 destination: dLocation,
+                fee: fee
             });
 
             await data.save();
-
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
             });

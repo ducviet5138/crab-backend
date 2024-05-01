@@ -20,7 +20,7 @@ export class BikeEconomyStrategy implements IFeeStrategy {
     }
 
     getTypeVehicle(): string {
-        return 'Bike';
+        return 'motorbike';
     }
 
 }

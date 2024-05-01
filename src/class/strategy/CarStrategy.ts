@@ -18,6 +18,6 @@ export class CarStrategy implements IFeeStrategy {
     }
 
     getTypeVehicle(): string {
-        return 'Car';
+        return 'car';
     }
 }

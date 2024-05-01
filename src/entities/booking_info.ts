@@ -22,6 +22,9 @@ const Schema = new mongoose.Schema(
         fare: {
             type: Number,
         },
+        fee: {
+            type: Number,
+        }
     },
     {
         versionKey: false,

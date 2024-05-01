@@ -11,7 +11,7 @@ import BookingInfoService from "./booking-infos";
 class BookingService {
     async flatCreate(req: Request) {
         try {
-            const { ordered_by } = req.body;
+            const { ordered_by, service } = req.body;
 
             if (!ordered_by) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
@@ -22,6 +22,7 @@ class BookingService {
             const data = new Booking({
                 info: objectIdConverter(booking_info.data._id),
                 // orderedBy: objectIdConverter(ordered_by),
+                service: service,
             });
 
             await data.save();
@@ -29,7 +30,8 @@ class BookingService {
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
             });
-        } catch (_: any) {
+        } catch (_e: any) {
+            console.log(_e);
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
     }
