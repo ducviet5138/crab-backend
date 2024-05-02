@@ -25,11 +25,12 @@ const Schema = new mongoose.Schema(
         },
         vehicle: {
             type: String,
-            enum: ["car", "motorbike"]
+            enum: ["car", "motorbike"],
         },
         service: {
-            type: String
-        }
+            type: String,
+            enum: ["Car Economy", "Car", "Bike Economy", "Bike"],
+        },
     },
     {
         versionKey: false,

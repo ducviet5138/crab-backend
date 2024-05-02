@@ -55,4 +55,16 @@ router.patch('/:id', async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse()); 
 });
 
+// POST: /api/location-records/:id/update-fee
+// Desc: Update fee of a booking info which is associated with a location record
+router.post('/:id/update-fee', async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await LocationRecordsService.updateFee(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse()); 
+});
+
 export default router;

@@ -8,11 +8,11 @@ export class BikeEconomyStrategy implements IFeeStrategy {
             fee = distance*12500;
         else
             fee = 2*12500 + (distance-2)*4300;
-        return fee
+        return fee;
     }
 
     getName(): string {
-        return 'Crab Bike Economy';
+        return 'Bike Economy';
     }
 
     getNumSeat(): number {

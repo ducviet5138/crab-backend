@@ -2,8 +2,16 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { LocationRecord } from "@/entities";
+import * as dotenv from "dotenv";
+dotenv.config();
+
+import { LocationRecord, BookingInfo, Booking } from "@/entities";
 import coordinateConverter from "@/utils/CoordinateConverter";
+import objectIdConverter from "@/utils/ObjectIdConverter";
+
+import { FeeDriving } from "@/class/FeeDriving";
+import { BikeStrategy } from "@/class/strategy/BikeStrategy";
+import { CarStrategy } from "@/class/strategy/CarStrategy";
 
 class LocationRecordsService {
     async create(req: Request) {
@@ -117,6 +125,75 @@ class LocationRecordsService {
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async updateFee(req: Request) {
+        try {
+            const { id } = req.params;
+
+            const associatedBookingInfo = (await BookingInfo.find({
+                $or: [{ pickup: objectIdConverter(id) }, { destination: objectIdConverter(id) }],
+            }).populate("pickup destination")) as any;
+
+            if (!associatedBookingInfo) {
+                return new BaseResponse(RET_CODE.ERROR, false, "Record not found");
+            }
+
+            let totalUpdatedDocuments = 0;
+
+            for (const it of associatedBookingInfo)
+                if (it.pickup.location && it.destination.location && !it.fee) {
+                    const dLong = it.destination.location.coordinates[0];
+                    const dLat = it.destination.location.coordinates[1];
+
+                    const pLong = it.pickup.location.coordinates[0];
+                    const pLat = it.pickup.location.coordinates[1];
+
+                    const requestUrl =
+                        "https://maps.googleapis.com/maps/api/distancematrix/json" +
+                        "?origins=" +
+                        pLat +
+                        "," +
+                        pLong +
+                        "&destinations=" +
+                        dLat +
+                        "," +
+                        dLong +
+                        "&key=" +
+                        process.env.API_KEY;
+
+                    const response = await fetch(requestUrl);
+                    const data = await response.json();
+
+                    const distance = data.rows[0].elements[0].distance.value / 1000; // in km
+
+                    // Get all fee strategies
+                    // If customer place order from telephone operator, there are 2 options: bike and car
+                    const feeDriving = new FeeDriving(distance);
+                    feeDriving.feeManager.addFeeStrategy(new BikeStrategy());
+                    feeDriving.feeManager.addFeeStrategy(new CarStrategy());
+                    const feeList = feeDriving.getAllFeeStrategy();
+
+                    // Find type of vehicle in Booking
+                    const booking = await Booking.findOne({
+                        info: it._id,
+                    });
+
+                    // Calculate fee
+                    const fee = feeList.find((fee) => fee.typeVehicle === booking.vehicle).fee;
+
+                    // Update fee to BookingInfo
+                    it.fee = fee;
+                    await it.save();
+                    ++totalUpdatedDocuments;
+                }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                totalUpdatedDocuments,
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);

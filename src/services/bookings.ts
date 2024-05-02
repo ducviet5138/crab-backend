@@ -2,8 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { Booking } from "@/entities/booking";
-import { BookingInfo, LocationRecord } from "@/entities";
+import { BookingInfo, LocationRecord, Booking } from "@/entities";
 import objectIdConverter from "@/utils/ObjectIdConverter";
 
 import BookingInfoService from "./booking-infos";
@@ -11,7 +10,7 @@ import BookingInfoService from "./booking-infos";
 class BookingService {
     async flatCreate(req: Request) {
         try {
-            const { ordered_by, service } = req.body;
+            const { ordered_by, service, vehicle } = req.body;
 
             if (!ordered_by) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
@@ -21,8 +20,9 @@ class BookingService {
 
             const data = new Booking({
                 info: objectIdConverter(booking_info.data._id),
-                // orderedBy: objectIdConverter(ordered_by),
-                service: service,
+                orderedBy: objectIdConverter(ordered_by),
+                vehicle,
+                service,
             });
 
             await data.save();
@@ -30,8 +30,7 @@ class BookingService {
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
             });
-        } catch (_e: any) {
-            console.log(_e);
+        } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
     }
