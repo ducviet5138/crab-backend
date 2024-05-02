@@ -2,11 +2,9 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord, User } from "@/entities";
-import accounts from "./accounts";
+import { BookingInfo, LocationRecord } from "@/entities";
 
 class BookingInfoService {
-
     async createWithLatLng(req: Request) {
         try {
             const { pLat, pLng, dLat, dLng, pAddress, dAddress, name, phone, fee } = req.body;

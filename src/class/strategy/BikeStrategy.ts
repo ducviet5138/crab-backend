@@ -3,7 +3,7 @@ import { IFeeStrategy } from '../IFeeStrategy';
 export class BikeStrategy implements IFeeStrategy {
 
     getName(): string {
-        return 'Crab bike';
+        return 'Bike';
     }
 
     getNumSeat(): number {
@@ -16,7 +16,7 @@ export class BikeStrategy implements IFeeStrategy {
             fee = distance*12500;
         
         fee = 2*12500 + (distance-2)*4300;
-        return fee
+        return fee;
     }
 
     getTypeVehicle(): string {

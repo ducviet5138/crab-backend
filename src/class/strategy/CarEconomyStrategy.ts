@@ -6,7 +6,7 @@ export class CarEconomyStrategy implements IFeeStrategy {
         if (distance <= 2)
             return  distance*267000;
         else
-            return 2*26700 + (distance-2)*9100
+            return 2*26700 + (distance-2)*9100;
     }
 
     getName(): string {

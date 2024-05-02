@@ -19,12 +19,9 @@ const Schema = new mongoose.Schema(
         distance: {
             type: Number,
         },
-        fare: {
-            type: Number,
-        },
         fee: {
             type: Number,
-        }
+        },
     },
     {
         versionKey: false,

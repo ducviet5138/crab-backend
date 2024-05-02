@@ -60,7 +60,7 @@ class AccountService {
             }
 
             // Return JWT token
-            const token = generateJWTToken({ 
+            const token = generateJWTToken({
                 _id: account._id.toString(),
                 phone: account.phone,
                 name: account.name,
@@ -97,7 +97,7 @@ class AccountService {
                 await existedAccount.save();
 
                 // Return JWT token
-                const token = generateJWTToken({ 
+                const token = generateJWTToken({
                     _id: existedAccount._id.toString(),
                     phone: existedAccount.phone,
                     name: existedAccount.name,
@@ -119,7 +119,7 @@ class AccountService {
             await data.save();
 
             // Return JWT token
-            const token = generateJWTToken({ 
+            const token = generateJWTToken({
                 _id: existedAccount._id.toString(),
                 phone: existedAccount.phone,
                 name: existedAccount.name,
@@ -127,7 +127,7 @@ class AccountService {
             });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
-                token
+                token,
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
@@ -178,7 +178,7 @@ class AccountService {
             await account.save();
 
             // Get token
-            const token = generateJWTToken({ 
+            const token = generateJWTToken({
                 _id: account._id.toString(),
                 phone: account.phone,
                 name: account.name,
