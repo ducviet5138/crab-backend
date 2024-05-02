@@ -65,6 +65,7 @@ class AccountService {
                 phone: account.phone,
                 name: account.name,
                 role: account.role,
+                avatar: account.avatar,
             });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
@@ -102,6 +103,7 @@ class AccountService {
                     phone: existedAccount.phone,
                     name: existedAccount.name,
                     role: existedAccount.role,
+                    avatar: existedAccount.avatar,
                 });
 
                 return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
@@ -124,6 +126,7 @@ class AccountService {
                 phone: existedAccount.phone,
                 name: existedAccount.name,
                 role: existedAccount.role,
+                token: existedAccount.avatar,
             });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
@@ -183,6 +186,7 @@ class AccountService {
                 phone: account.phone,
                 name: account.name,
                 role: account.role,
+                avatar: account.avatar,
             });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
