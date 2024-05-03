@@ -18,6 +18,23 @@ const startServer = async () => {
         app.listen(port, () => {
             console.log(`[Server] Server is running at http://localhost:${port}`);
         });
+
+        const pendingBookings = await Booking.find({ status: 'pending' });
+
+       for (const booking of pendingBookings) {
+            if(booking.info instanceof BookingInfo) {
+                if(booking.info.pickup instanceof LocationRecord)
+                {
+                    bookingQueue.push(new BookingWS(booking._id.toString(), booking.info.pickup.location?.coordinates[1],booking.info.pickup.location?.coordinates[0], booking.orderedBy?.toString()));
+                }
+
+            }
+            else {
+                bookingQueue.push(new BookingWS(booking._id.toString(), 0,0, booking.orderedBy.toString()));
+            }
+
+       }
+       reassignBookingToOtherDrivers();
     } catch (err) {
         console.error('[Database] Error: ', err);
     }
@@ -77,6 +94,7 @@ app.use('/', router);
 // ========================================================
 // Websocket handle
 import * as WebSocket from 'ws';
+import { Booking, BookingInfo, LocationRecord } from './entities';
 
 const wss = new WebSocket.Server({ port: 8080 });
 
@@ -112,6 +130,7 @@ class BookingWS {
     status: string;
     assignedDriver: Driver | null;
     timeout: NodeJS.Timeout | null;
+    listDeny: WebSocket[]
 
     constructor(bookingId: string, lat: number, lng: number, userUid: string) {
         this.bookingId = bookingId;
@@ -120,6 +139,7 @@ class BookingWS {
         this.userUid = userUid;
         this.status = 'pending';
         this.assignedDriver = null;
+        this.listDeny = [];
         this.timeout = null;
     }
 }
@@ -169,10 +189,12 @@ wss.on('connection', (ws: WebSocket) => {
 
 async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: number, lng?: number, booking?: any }) {
     if (data.event === 'driverOnline') {
-        const driver = new Driver(ws);
-        onlineDrivers.push(driver);
+        const driver = new Driver(ws)
+        onlineDrivers.push(driver)
+        reassignBookingToOtherDrivers()
     } else if (data.event === 'driverOffline') {
         onlineDrivers = onlineDrivers.filter(driver => driver.ws !== ws);
+        ws.close()
     } else if (data.event === 'locationUpdate') {
         const driver = onlineDrivers.find(driver => driver.ws === ws);
         if (driver) {
@@ -181,7 +203,7 @@ async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: n
         }
         reassignBookingToOtherDrivers();
     } else if (data.event === 'bookingResponse') {
-        handleBookingResponse(data.booking);
+        handleBookingResponse(data.booking, ws);
     }
 }
 
@@ -199,7 +221,7 @@ function handleClientDisconnect(ws: WebSocket) {
 }
 
 
-function handleBookingResponse(data: { bookingId: string, response: string}) {
+function handleBookingResponse(data: { bookingId: string, response: string}, ws: WebSocket) {
     const booking = bookingQueue.find(booking => booking.bookingId === data.bookingId);
     if (booking) {
         if (booking.timeout) {
@@ -216,7 +238,10 @@ function handleBookingResponse(data: { bookingId: string, response: string}) {
             // clear timeout
             booking.timeout = null;
         } else {
-            booking.status = 'rejected';
+            booking.status = 'pending';
+            const driver = onlineDrivers.find(driver => driver.ws === ws);
+            driver.status = 'online'
+            booking.listDeny.push(ws)
             reassignBookingToOtherDrivers();
         }
 
@@ -228,6 +253,7 @@ function handleDriverTimeout(booking: BookingWS) {
     if (booking.status === 'assigned') {
         // If the booking is still assigned (driver did not respond within the timeout)
         booking.status = 'pending'; // Update booking status
+        booking.assignedDriver
         booking.assignedDriver.ws.send(JSON.stringify({ event: 'bookingTimeout', bookingId: booking.bookingId }));
         // Reassign the booking to other available drivers
         onlineDrivers = onlineDrivers.filter(driver => driver !== booking.assignedDriver);
@@ -259,11 +285,15 @@ function findSuitableDriver(booking: BookingWS): Driver | null {
     var minDistance = Number.MAX_VALUE;
     var suitableDriver = null;
     onlineDrivers.forEach(driver => {
-        if (driver.status === 'online' && driver.lat && driver.lng && booking.lat && booking.lng) {
-            const distance = Math.sqrt(Math.pow(booking.lat - driver.lat, 2) + Math.pow(booking.lng - driver.lng, 2));
-            if (distance < minDistance) {
-                minDistance = distance;
-                suitableDriver = driver;
+        // if driver in deny list of booking
+        if(!booking.listDeny.includes(driver.ws))
+        {
+            if (driver.status === 'online' && driver.lat && driver.lng && booking.lat && booking.lng) {
+                const distance = Math.sqrt(Math.pow(booking.lat - driver.lat, 2) + Math.pow(booking.lng - driver.lng, 2));
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    suitableDriver = driver;
+                }
             }
         }
     });
