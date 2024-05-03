@@ -22,6 +22,12 @@ const Schema = new mongoose.Schema(
         firebaseUID: {
             type: String,
         },
+        payment_methods: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "PaymentMethod",
+            },
+        ],
     },
     {
         versionKey: false,

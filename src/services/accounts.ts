@@ -2,7 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { User } from "@/entities";
+import { User, PaymentMethod } from "@/entities";
 
 import hashPassword from "@/utils/HashPassword";
 import generateJWTToken from "@/utils/GenerateJWTToken";
@@ -191,6 +191,54 @@ class AccountService {
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 token,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async addPaymentMethod(req: Request) {
+        try {
+            const { id } = req.params;
+            const { number, exp, cvv, name } = req.body;
+
+            const account = await User.findById(objectIdConverter(id));
+
+            if (!account) {
+                return new BaseResponse(RET_CODE.ERROR, false, "Phone number is invalid");
+            }
+
+            const card = new PaymentMethod({
+                number,
+                exp,
+                cvv,
+                name,
+            });
+
+            await card.save();
+
+            account.payment_methods.push(card._id);
+
+            await account.save();
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getPaymentMethods(req: Request) {
+        try {
+            const { id } = req.params;
+
+            const account = (await User.findById(objectIdConverter(id)).populate("payment_methods")) as any;
+
+            if (!account) {
+                return new BaseResponse(RET_CODE.ERROR, false, "Phone number is invalid");
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                data: account.payment_methods,
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);

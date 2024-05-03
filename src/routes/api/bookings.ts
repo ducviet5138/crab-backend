@@ -2,7 +2,7 @@ import * as Express from "express";
 import { Request, Response } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
-import { addBookingToQueue } from "@/app";
+// import { addBookingToQueue } from "@/app";
 import BookingService from "@/services/bookings";
 
 const router = Express.Router();

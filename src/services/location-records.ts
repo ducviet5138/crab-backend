@@ -123,7 +123,7 @@ class LocationRecordsService {
             }
 
             await data.save();
-            
+
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
             });
@@ -183,8 +183,6 @@ class LocationRecordsService {
                     const booking = await Booking.findOne({
                         info: it._id,
                     });
-
-
 
                     // Calculate fee
                     const fee = feeList.find((fee) => fee.typeVehicle === booking.vehicle).fee;

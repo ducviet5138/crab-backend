@@ -28,11 +28,11 @@ const Schema = new mongoose.Schema(
     }
 );
 
-Schema.pre("find", function() {
+Schema.pre("find", function () {
     this.populate("pickup").populate("destination");
 });
 
-Schema.pre("findOne", function() {
+Schema.pre("findOne", function () {
     this.populate("pickup").populate("destination");
 });
 
