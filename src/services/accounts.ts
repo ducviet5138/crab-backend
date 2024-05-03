@@ -122,11 +122,11 @@ class AccountService {
 
             // Return JWT token
             const token = generateJWTToken({
-                _id: existedAccount._id.toString(),
-                phone: existedAccount.phone,
-                name: existedAccount.name,
-                role: existedAccount.role,
-                token: existedAccount.avatar,
+                _id: data._id.toString(),
+                phone: data.phone,
+                name: data.name,
+                role: data.role,
+                avatar: data.avatar,
             });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
@@ -177,6 +177,7 @@ class AccountService {
             // Update data if it's not empty
             if (name) account.name = name;
             if (avatar) account.avatar = avatar;
+            if (role) account.role = role;
 
             await account.save();
 
