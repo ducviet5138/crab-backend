@@ -67,7 +67,7 @@ class BookingInfoService {
                 phone: phone,
                 pickup: pLocation,
                 destination: dLocation,
-                fee: fee
+                fee: fee,
             });
 
             await data.save();

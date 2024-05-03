@@ -38,11 +38,11 @@ const Schema = new mongoose.Schema(
     }
 );
 
-Schema.pre("find", function() {
+Schema.pre("find", function () {
     this.populate("info").populate("driver").populate("orderedBy");
 });
 
-Schema.pre("findOne", function() {
+Schema.pre("findOne", function () {
     this.populate("info").populate("driver").populate("orderedBy");
 });
 

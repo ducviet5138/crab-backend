@@ -7,7 +7,7 @@ import objectIdConverter from "@/utils/ObjectIdConverter";
 
 import BookingInfoService from "./booking-infos";
 
-import { addBookingToQueue, BookingWS} from "@/app";
+import { addBookingToQueue, BookingWS } from "@/app";
 
 class BookingService {
     async flatCreate(req: Request) {
@@ -26,7 +26,6 @@ class BookingService {
                 vehicle,
                 service,
             });
-
 
             await data.save();
             const dat = new BookingWS(data._id.toString(), req.body.pLat, req.body.pLng, req.body.ordered_by);
@@ -168,11 +167,15 @@ class BookingService {
                 vehicle,
             });
 
-
             const pickup = await LocationRecord.findById(pickUpId);
-            
-            const dat = new BookingWS(data._id.toString(), pickup?.location?.coordinates[1], pickup?.location?.coordinates[0], ordered_by);
-            
+
+            const dat = new BookingWS(
+                data._id.toString(),
+                pickup?.location?.coordinates[1],
+                pickup?.location?.coordinates[0],
+                ordered_by
+            );
+
             addBookingToQueue(dat);
 
             await data.save();

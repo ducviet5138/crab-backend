@@ -130,7 +130,7 @@ class BookingWS {
     status: string;
     assignedDriver: Driver | null;
     timeout: NodeJS.Timeout | null;
-    listDeny: WebSocket[]
+    listDeny: WebSocket[];
 
     constructor(bookingId: string, lat: number, lng: number, userUid: string) {
         this.bookingId = bookingId;
@@ -148,30 +148,30 @@ let onlineDrivers: Driver[] = [];
 let onlineCustomers: Customer[] = [];
 let bookingQueue: BookingWS[] = [];
 
-const bookingMutex = {
-    isLocked: false,
-    queue: [],
-    lock: function (): Promise<void> {
-        return new Promise(resolve => {
-            if (!this.isLocked) {
-                this.isLocked = true;
-                resolve();
-            } else {
-                this.queue.push(resolve);
-            }
-        });
-    },
-    unlock: function (): void {
-        if (this.queue.length > 0) {
-            const nextResolve = this.queue.shift();
-            if (nextResolve) {
-                nextResolve();
-            }
-        } else {
-            this.isLocked = false;
-        }
-    }
-};
+// const bookingMutex = {
+//     isLocked: false,
+//     queue: [],
+//     lock: function (): Promise<void> {
+//         return new Promise(resolve => {
+//             if (!this.isLocked) {
+//                 this.isLocked = true;
+//                 resolve();
+//             } else {
+//                 this.queue.push(resolve);
+//             }
+//         });
+//     },
+//     unlock: function (): void {
+//         if (this.queue.length > 0) {
+//             const nextResolve = this.queue.shift();
+//             if (nextResolve) {
+//                 nextResolve();
+//             }
+//         } else {
+//             this.isLocked = false;
+//         }
+//     }
+// };
 
 const TIMEOUT_DURATION = 10000; // 10 seconds
 
@@ -189,12 +189,12 @@ wss.on('connection', (ws: WebSocket) => {
 
 async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: number, lng?: number, booking?: any }) {
     if (data.event === 'driverOnline') {
-        const driver = new Driver(ws)
-        onlineDrivers.push(driver)
-        reassignBookingToOtherDrivers()
+        const driver = new Driver(ws);
+        onlineDrivers.push(driver);
+        reassignBookingToOtherDrivers();
     } else if (data.event === 'driverOffline') {
         onlineDrivers = onlineDrivers.filter(driver => driver.ws !== ws);
-        ws.close()
+        ws.close();
     } else if (data.event === 'locationUpdate') {
         const driver = onlineDrivers.find(driver => driver.ws === ws);
         if (driver) {
@@ -207,13 +207,13 @@ async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: n
     }
 }
 
-function handleCustomerMessage(ws: WebSocket, data: { event: string, userUid?: string }) {
-    if (data.event === 'updateCustomer') {
-        const customer = new Customer(ws);
-        customer.userUid = data.userUid || null;
-        onlineCustomers.push(customer);
-    }
-}
+// function handleCustomerMessage(ws: WebSocket, data: { event: string, userUid?: string }) {
+//     if (data.event === 'updateCustomer') {
+//         const customer = new Customer(ws);
+//         customer.userUid = data.userUid || null;
+//         onlineCustomers.push(customer);
+//     }
+// }
 
 function handleClientDisconnect(ws: WebSocket) {
     onlineDrivers = onlineDrivers.filter(driver => driver.ws !== ws);
@@ -240,8 +240,8 @@ function handleBookingResponse(data: { bookingId: string, response: string}, ws:
         } else {
             booking.status = 'pending';
             const driver = onlineDrivers.find(driver => driver.ws === ws);
-            driver.status = 'online'
-            booking.listDeny.push(ws)
+            driver.status = 'online';
+            booking.listDeny.push(ws);
             reassignBookingToOtherDrivers();
         }
 
@@ -253,7 +253,7 @@ function handleDriverTimeout(booking: BookingWS) {
     if (booking.status === 'assigned') {
         // If the booking is still assigned (driver did not respond within the timeout)
         booking.status = 'pending'; // Update booking status
-        booking.assignedDriver
+        booking.assignedDriver;
         booking.assignedDriver.ws.send(JSON.stringify({ event: 'bookingTimeout', bookingId: booking.bookingId }));
         // Reassign the booking to other available drivers
         onlineDrivers = onlineDrivers.filter(driver => driver !== booking.assignedDriver);
@@ -282,8 +282,8 @@ function reassignBookingToOtherDrivers() {
 }
 
 function findSuitableDriver(booking: BookingWS): Driver | null {
-    var minDistance = Number.MAX_VALUE;
-    var suitableDriver = null;
+    let minDistance = Number.MAX_VALUE;
+    let suitableDriver = null;
     onlineDrivers.forEach(driver => {
         // if driver in deny list of booking
         if(!booking.listDeny.includes(driver.ws))
