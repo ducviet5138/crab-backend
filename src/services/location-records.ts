@@ -1,6 +1,7 @@
 import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
+import { updateBookingWS } from "@/app";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -122,7 +123,7 @@ class LocationRecordsService {
             }
 
             await data.save();
-
+            
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
             });
@@ -183,9 +184,11 @@ class LocationRecordsService {
                         info: it._id,
                     });
 
+
+
                     // Calculate fee
                     const fee = feeList.find((fee) => fee.typeVehicle === booking.vehicle).fee;
-
+                    updateBookingWS(booking._id.toString(), pLat, pLong);
                     // Update fee to BookingInfo
                     it.fee = fee;
                     await it.save();
