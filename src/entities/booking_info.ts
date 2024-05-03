@@ -28,4 +28,12 @@ const Schema = new mongoose.Schema(
     }
 );
 
+Schema.pre("find", function() {
+    this.populate("pickup").populate("destination");
+});
+
+Schema.pre("findOne", function() {
+    this.populate("pickup").populate("destination");
+});
+
 export const BookingInfo = mongoose.model("BookingInfo", Schema, "booking_infos");

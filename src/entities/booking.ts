@@ -20,7 +20,7 @@ const Schema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["pending", "accepted", "rejected", "canceled", "completed"],
+            enum: ["pending", "accepted", "canceled", "completed"],
             default: "pending",
         },
         vehicle: {
@@ -37,5 +37,13 @@ const Schema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+Schema.pre("find", function() {
+    this.populate("info").populate("driver").populate("orderedBy");
+});
+
+Schema.pre("findOne", function() {
+    this.populate("info").populate("driver").populate("orderedBy");
+});
 
 export const Booking = mongoose.model("Booking", Schema, "bookings");
