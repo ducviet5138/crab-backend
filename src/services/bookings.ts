@@ -165,6 +165,7 @@ class BookingService {
                 info: bookingInfo._id,
                 orderedBy: objectIdConverter(ordered_by),
                 vehicle,
+                service: vehicle === "car" ? "Car" : "Bike",
             });
 
             const pickup = await LocationRecord.findById(pickUpId);
