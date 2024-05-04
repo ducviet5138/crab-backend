@@ -240,7 +240,9 @@ function handleBookingResponse(data: { bookingId: string, response: string}, ws:
         } else {
             booking.status = 'pending';
             const driver = onlineDrivers.find(driver => driver.ws === ws);
-            driver.status = 'online';
+            if (driver) {
+                driver.status = 'online';
+            }
             booking.listDeny.push(ws);
             reassignBookingToOtherDrivers();
         }

@@ -2,7 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { User, PaymentMethod } from "@/entities";
+import { User, PaymentMethod, Vehicle } from "@/entities";
 
 import hashPassword from "@/utils/HashPassword";
 import generateJWTToken from "@/utils/GenerateJWTToken";
@@ -240,6 +240,97 @@ class AccountService {
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 data: account.payment_methods,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async addOrUpdateVehicle(req: Request) {
+        try {
+            const { id } = req.params;
+            const { plate, type, description } = req.body;
+
+            const vehicle = await Vehicle.findOne({ user: objectIdConverter(id) });
+
+            // If vehicle is not existed, create new one
+            if (!vehicle) {
+                const newVehicle = new Vehicle({
+                    user: objectIdConverter(id),
+                    plate,
+                    type,
+                    description,
+                });
+
+                await newVehicle.save();
+
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    user: newVehicle.user,
+                    plate: newVehicle.plate,
+                    type: newVehicle.type,
+                    description: newVehicle.description,
+                });
+            } else {
+                // Update vehicle if it's already existed
+                vehicle.plate = plate;
+                vehicle.type = type;
+                vehicle.description = description;
+
+                await vehicle.save();
+
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    user: vehicle.user,
+                    plate: vehicle.plate,
+                    type: vehicle.type,
+                    description: vehicle.description,
+                });
+            }
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getVehicles(req: Request) {
+        try {
+            const { id } = req.params;
+
+            const vehicle = await Vehicle.findOne({ user: objectIdConverter(id) });
+
+            // If vehicle is not existed, return "" in all fields
+            if (!vehicle) {
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    user: "",
+                    plate: "",
+                    type: "",
+                    description: "",
+                });
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                user: vehicle.user,
+                plate: vehicle.plate,
+                type: vehicle.type,
+                description: vehicle.description,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async validateVehicle(req: Request) {
+        try {
+            const { id } = req.params;
+
+            const vehicle = await Vehicle.findOne({ user: objectIdConverter(id) });
+
+            if (!vehicle) {
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    data: false,
+                });
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                data: true,
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);

@@ -78,4 +78,41 @@ router.get('/:id/payment-methods', async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse()); 
 });
 
+
+// PATCH: /api/accounts/:id/vehicles
+// Desc: Add or update a vehicle
+router.patch('/:id/vehicles', async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await AccountService.addOrUpdateVehicle(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse()); 
+});
+
+// GET: /api/accounts/:id/vehicles
+// Desc: Get vehicles of an account
+router.get('/:id/vehicles', async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await AccountService.getVehicles(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse()); 
+});
+
+// GET: /api/accounts/:id/vehicles/validation
+// Desc: Check if a user has a vehicle
+router.get('/:id/vehicles/validation', async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await AccountService.validateVehicle(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse()); 
+});
+
 export default router;
