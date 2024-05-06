@@ -49,11 +49,18 @@ class AccountService {
 
             if (!role) role = "customer";
 
-            const account = await User.findOne({
+            let account = await User.findOne({
                 phone,
                 role,
                 password: hashPassword(password),
             });
+
+            if (!account && role == "staff")
+                account = await User.findOne({
+                    phone,
+                    role: "admin",
+                    password: hashPassword(password),
+                });
 
             if (!account) {
                 return new BaseResponse(RET_CODE.ERROR, false, "Phone number or password is invalid");
