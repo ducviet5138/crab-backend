@@ -101,12 +101,14 @@ const wss = new WebSocket.Server({ port: 8080 });
 class Driver {
     ws: WebSocket;
     status: string;
+    vehicle: string;
     lat: number | null;
     lng: number | null;
 
     constructor(ws: WebSocket) {
         this.ws = ws;
         this.status = 'online';
+        this.vehicle = '';
         this.lat = null;
         this.lng = null;
     }
@@ -187,7 +189,7 @@ wss.on('connection', (ws: WebSocket) => {
     });
 });
 
-async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: number, lng?: number, booking?: any }) {
+async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: number, lng?: number, booking?: any, vehicle?: string }) {
     if (data.event === 'driverOnline') {
         const driver = new Driver(ws);
         onlineDrivers.push(driver);
@@ -204,6 +206,13 @@ async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: n
         reassignBookingToOtherDrivers();
     } else if (data.event === 'bookingResponse') {
         handleBookingResponse(data.booking, ws);
+    }
+    else if (data.event === 'updateVehicle')
+    {
+        const driver = onlineDrivers.find(driver => driver.ws === ws);
+        if (driver) {
+            driver.vehicle = data.vehicle;
+        }
     }
 }
 
@@ -243,7 +252,7 @@ function handleBookingResponse(data: { bookingId: string, response: string}, ws:
             if (driver) {
                 driver.status = 'online';
             }
-            booking.listDeny.push(ws);
+            booking.listDeny.push(ws)
             reassignBookingToOtherDrivers();
         }
 
@@ -255,8 +264,10 @@ function handleDriverTimeout(booking: BookingWS) {
     if (booking.status === 'assigned') {
         // If the booking is still assigned (driver did not respond within the timeout)
         booking.status = 'pending'; // Update booking status
-        booking.assignedDriver;
         booking.assignedDriver.ws.send(JSON.stringify({ event: 'bookingTimeout', bookingId: booking.bookingId }));
+        booking.assignedDriver.ws.close()
+
+        
         // Reassign the booking to other available drivers
         onlineDrivers = onlineDrivers.filter(driver => driver !== booking.assignedDriver);
         reassignBookingToOtherDrivers();
