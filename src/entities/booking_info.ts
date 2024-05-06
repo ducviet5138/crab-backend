@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { Transaction } from "./transaction";
 
 const Schema = new mongoose.Schema(
     {
@@ -25,8 +24,8 @@ const Schema = new mongoose.Schema(
         },
         transaction: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Transaction"
-        }
+            ref: "Transaction",
+        },
     },
     {
         versionKey: false,
