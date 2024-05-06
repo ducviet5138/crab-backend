@@ -3,14 +3,12 @@ import { IFeeStrategy } from "../IFeeStrategy";
 export class CarStrategy implements IFeeStrategy {
     // create method
     calculateFee(distance: number): number {
-        if (distance <= 2)
-            return distance*29000;
-        else
-            return 2*29000 + (distance-2)*9000;
+        if (distance <= 2) return distance * 29000;
+        else return 2 * 29000 + (distance - 2) * 9000;
     }
 
     getName(): string {
-        return 'Car';
+        return "Car";
     }
 
     getNumSeat(): number {
@@ -18,6 +16,6 @@ export class CarStrategy implements IFeeStrategy {
     }
 
     getTypeVehicle(): string {
-        return 'car';
+        return "car";
     }
 }
