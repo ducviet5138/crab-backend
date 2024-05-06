@@ -246,6 +246,18 @@ class AccountService {
         }
     }
 
+    async getMembers(req: Request) {
+        try {
+            const members = await User.find({ role: { $ne: "admin" } });
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                data: members,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
     async addOrUpdateVehicle(req: Request) {
         try {
             const { id } = req.params;
