@@ -10,14 +10,13 @@ class BookingInfoService {
         try {
             const { pLat, pLng, dLat, dLng, pAddress, dAddress, name, phone, fee } = req.body;
 
-            const {visa} = req.body;
+            const { visa } = req.body;
             let ref = null;
-            if(visa) {
-              ref =  new Transaction({
-                ref: generateTrans()
-              });
-              await ref.save();
-            
+            if (visa) {
+                ref = new Transaction({
+                    ref: generateTrans(),
+                });
+                await ref.save();
             }
 
             if (!pLat || !pLng || !dLat || !dLng || !pAddress || !dAddress || !name || !phone) {
@@ -79,7 +78,7 @@ class BookingInfoService {
                 pickup: pLocation,
                 destination: dLocation,
                 fee: fee,
-                transaction: ref ? ref._id : null
+                transaction: ref ? ref._id : null,
             });
 
             await data.save();

@@ -1,9 +1,8 @@
-import { IFeeStrategy } from '../IFeeStrategy';
+import { IFeeStrategy } from "../IFeeStrategy";
 
 export class BikeStrategy implements IFeeStrategy {
-
     getName(): string {
-        return 'Bike';
+        return "Bike";
     }
 
     getNumSeat(): number {
@@ -12,14 +11,13 @@ export class BikeStrategy implements IFeeStrategy {
     // create method
     calculateFee(distance: number): number {
         let fee = 0;
-        if (distance <= 2)
-            fee = distance*12500;
-        
-        fee = 2*12500 + (distance-2)*4300;
+        if (distance <= 2) fee = distance * 12500;
+
+        fee = 2 * 12500 + (distance - 2) * 4300;
         return fee;
     }
 
     getTypeVehicle(): string {
-        return 'motorbike';
+        return "motorbike";
     }
 }

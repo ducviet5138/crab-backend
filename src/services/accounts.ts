@@ -2,7 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { User, PaymentMethod, Vehicle } from "@/entities";
+import { User, PaymentMethod, Vehicle, Booking } from "@/entities";
 
 import hashPassword from "@/utils/HashPassword";
 import generateJWTToken from "@/utils/GenerateJWTToken";
@@ -351,6 +351,24 @@ class AccountService {
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 data: true,
             });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getHistory(req: Request) {
+        try {
+            const { id } = req.params;
+
+            // either orderedBy or driver
+            const data = await Booking.find({
+                $or: [{ orderedBy: objectIdConverter(id) }, { driver: objectIdConverter(id) }],
+            })
+                .populate("info")
+                .populate("orderedBy")
+                .populate("driver");
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, data);
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
