@@ -30,12 +30,14 @@ const startServer = async () => {
                             booking.info.pickup.location?.coordinates[1],
                             booking.info.pickup.location?.coordinates[0],
                             booking.orderedBy?.toString(),
-                            booking.vehicle,
+                            booking.vehicle
                         )
                     );
                 }
             } else {
-                bookingQueue.push(new BookingWS(booking._id.toString(), 0, 0, booking.orderedBy.toString(), booking.vehicle));
+                bookingQueue.push(
+                    new BookingWS(booking._id.toString(), 0, 0, booking.orderedBy.toString(), booking.vehicle)
+                );
             }
         }
         reassignBookingToOtherDrivers();
@@ -305,7 +307,14 @@ function findSuitableDriver(booking: BookingWS): Driver | null {
     for (const driver of onlineDrivers) {
         // if driver in deny list of booking
         if (!booking.listDeny.includes(driver.ws)) {
-            if (driver.status === "online" && driver.lat && driver.lng && booking.lat && booking.lng && driver.vehicle === booking.vehicle) {
+            if (
+                driver.status === "online" &&
+                driver.lat &&
+                driver.lng &&
+                booking.lat &&
+                booking.lng &&
+                driver.vehicle === booking.vehicle
+            ) {
                 const distance = Math.sqrt(
                     Math.pow(booking.lat - driver.lat, 2) + Math.pow(booking.lng - driver.lng, 2)
                 );

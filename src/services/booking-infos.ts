@@ -79,7 +79,7 @@ class BookingInfoService {
                 destination: dLocation,
                 fee: fee,
                 transaction: ref ? ref._id : null,
-                distance: distance ? distance : 0
+                distance: distance ? distance : 0,
             });
 
             await data.save();
