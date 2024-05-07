@@ -28,7 +28,13 @@ class BookingService {
             });
 
             await data.save();
-            const dat = new BookingWS(data._id.toString(), req.body.pLat, req.body.pLng, req.body.ordered_by, data.vehicle);
+            const dat = new BookingWS(
+                data._id.toString(),
+                req.body.pLat,
+                req.body.pLng,
+                req.body.ordered_by,
+                data.vehicle
+            );
             addBookingToQueue(dat);
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
