@@ -29,12 +29,13 @@ const startServer = async () => {
                             booking._id.toString(),
                             booking.info.pickup.location?.coordinates[1],
                             booking.info.pickup.location?.coordinates[0],
-                            booking.orderedBy?.toString()
+                            booking.orderedBy?.toString(),
+                            booking.vehicle,
                         )
                     );
                 }
             } else {
-                bookingQueue.push(new BookingWS(booking._id.toString(), 0, 0, booking.orderedBy.toString()));
+                bookingQueue.push(new BookingWS(booking._id.toString(), 0, 0, booking.orderedBy.toString(), booking.vehicle));
             }
         }
         reassignBookingToOtherDrivers();
@@ -128,16 +129,18 @@ class BookingWS {
     bookingId: string;
     lat: number;
     lng: number;
+    vehicle: string;
     userUid: string;
     status: string;
     assignedDriver: Driver | null;
     timeout: NodeJS.Timeout | null;
     listDeny: WebSocket[];
 
-    constructor(bookingId: string, lat: number, lng: number, userUid: string) {
+    constructor(bookingId: string, lat: number, lng: number, userUid: string, vehicle: string) {
         this.bookingId = bookingId;
         this.lat = lat;
         this.lng = lng;
+        this.vehicle = vehicle;
         this.userUid = userUid;
         this.status = "pending";
         this.assignedDriver = null;
@@ -299,10 +302,10 @@ function reassignBookingToOtherDrivers() {
 function findSuitableDriver(booking: BookingWS): Driver | null {
     let minDistance = Number.MAX_VALUE;
     let suitableDriver = null;
-    onlineDrivers.forEach((driver) => {
+    for (const driver of onlineDrivers) {
         // if driver in deny list of booking
         if (!booking.listDeny.includes(driver.ws)) {
-            if (driver.status === "online" && driver.lat && driver.lng && booking.lat && booking.lng) {
+            if (driver.status === "online" && driver.lat && driver.lng && booking.lat && booking.lng && driver.vehicle === booking.vehicle) {
                 const distance = Math.sqrt(
                     Math.pow(booking.lat - driver.lat, 2) + Math.pow(booking.lng - driver.lng, 2)
                 );
@@ -312,7 +315,7 @@ function findSuitableDriver(booking: BookingWS): Driver | null {
                 }
             }
         }
-    });
+    }
     return suitableDriver;
 }
 

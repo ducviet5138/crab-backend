@@ -31,4 +31,15 @@ router.get('/:id/card-incomes', async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
+// GET: /api/drivers/:id/vehicle-types
+router.get("/:id/vehicle-types", async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await AccountService.getCardIncome(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse());
+});
+
 export default router;
