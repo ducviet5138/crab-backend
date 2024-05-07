@@ -28,7 +28,7 @@ class BookingService {
             });
 
             await data.save();
-            const dat = new BookingWS(data._id.toString(), req.body.pLat, req.body.pLng, req.body.ordered_by);
+            const dat = new BookingWS(data._id.toString(), req.body.pLat, req.body.pLng, req.body.ordered_by, data.vehicle);
             addBookingToQueue(dat);
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
@@ -174,7 +174,8 @@ class BookingService {
                 data._id.toString(),
                 pickup?.location?.coordinates[1],
                 pickup?.location?.coordinates[0],
-                ordered_by
+                ordered_by,
+                data.vehicle
             );
 
             addBookingToQueue(dat);
