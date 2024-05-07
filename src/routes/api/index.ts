@@ -6,6 +6,7 @@ import staffRoute from "./staff";
 import bookingsRoute from "./bookings";
 import feeRoute from "./fee";
 import firebaseRoute from "./firebase";
+import driverRoute from "./drivers";
 
 const router = Express.Router();
 
@@ -14,8 +15,8 @@ router.use("/accounts", accountRoute);
 router.use("/location-records", locationRecordRoute);
 router.use("/staff", staffRoute);
 router.use("/bookings", bookingsRoute);
-
 router.use("/fee", feeRoute);
 router.use("/firebase", firebaseRoute);
+router.use("/drivers", driverRoute);
 
 export default router;
