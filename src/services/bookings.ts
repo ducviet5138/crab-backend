@@ -201,10 +201,10 @@ class BookingService {
 
             let total = 0;
 
-            for (const item of data) 
-            if (!item.info.transaction) {
-                total += item.info.fee;
-            }
+            for (const item of data)
+                if (!item.info.transaction) {
+                    total += item.info.fee;
+                }
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 total,
@@ -226,10 +226,10 @@ class BookingService {
 
             let total = 0;
 
-            for (const item of data) 
-            if (item.info.transaction) {
-                total += item.info.fee;
-            }
+            for (const item of data)
+                if (item.info.transaction) {
+                    total += item.info.fee;
+                }
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 total,
