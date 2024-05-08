@@ -11,5 +11,7 @@
         "paths": {
             "@/*": ["src/*"]
         },
+        "allowJs": true,
+        "resolveJsonModule": true,
     }
 }

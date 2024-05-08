@@ -12,10 +12,13 @@ export class BikeStrategy implements IFeeStrategy {
     // create method
     calculateFee(distance: number): number {
         let fee = 0;
-        if (distance <= 2)
-            fee = distance*12500;
-        
-        fee = 2*12500 + (distance-2)*4300;
+        if (distance <= 2) {
+            fee = distance*13500;
+            return fee
+    
+            
+        }
+        fee = 2*13500 + (distance-2)*4300;
         return fee;
     }
 

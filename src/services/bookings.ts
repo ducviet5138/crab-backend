@@ -2,12 +2,13 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord, Booking } from "@/entities";
+import { BookingInfo, LocationRecord, Booking, User, NotificationToken } from "@/entities";
 import objectIdConverter from "@/utils/ObjectIdConverter";
 
 import BookingInfoService from "./booking-infos";
-
+import NotificationService from "./notification";
 import { addBookingToQueue, BookingWS } from "@/app";
+import { TRIP_STATUS } from "@/utils/TripStatus";
 
 class BookingService {
     async flatCreate(req: Request) {
@@ -77,7 +78,36 @@ class BookingService {
 
             if (status === "accepted" && !driver) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
-            } else if (status === "accepted") {
+            } else{
+                const token = await NotificationToken.findOne({ user: data.orderedBy });
+                if (token != null)
+                {
+                    switch(status) {
+                        case "accepted": {
+                            const {driverLat, driverLng} = req.body;
+                            console.log(driverLat, driverLng)
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.DRIVER_COMMING, data._id.toString(), driverLat, driverLng);
+                            break;
+                        }
+                        case "arrived-at-pick-up": {
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.DRIVER_ARRIVED, data._id.toString());
+                            break;
+
+                        }
+                        case "pick-up": {
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.PICKUP,data._id.toString());
+                            break;
+
+                        }
+                        case "completed": {
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.TRIP_FINISHED, data._id.toString());
+                            break;
+
+                        }
+                    
+                    }
+                }
+
                 data.driver = driver;
             }
 
@@ -119,6 +149,41 @@ class BookingService {
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
+    }
+
+    async getByUserId(req: Request)
+    {
+        try {
+            const { id, role } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            if(!role) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            let data = null
+            if (role === "driver") {
+                data = await Booking.find({ driver: id }).populate("info").populate("orderedBy").populate("driver");
+            }else {
+                data = await Booking.find({ orderedBy: id }).populate("info").populate("orderedBy").populate("driver");
+            }
+            
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, data);
+        }catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getAssignedDriverBooking(req: Request) {
+        const {id} = req.params;
+        if (!id) {
+            return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+        }
+        const booking = await Booking.findById(id).populate("driver");
+        return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, booking.driver);
     }
 
     async createByStaff(req: Request) {
