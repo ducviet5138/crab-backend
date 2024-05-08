@@ -6,6 +6,7 @@ import staffRoute from './staff';
 import bookingsRoute from './bookings';
 import feeRoute from './fee';
 import firebaseRoute from './firebase';
+import notificationRoute from './notification';
 
 
 const router = Express.Router();
@@ -18,5 +19,6 @@ router.use('/bookings', bookingsRoute);
 
 router.use('/fee', feeRoute);
 router.use('/firebase', firebaseRoute);
+router.use('/notification', notificationRoute)
 
 export default router;

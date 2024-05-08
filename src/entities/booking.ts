@@ -20,7 +20,7 @@ const Schema = new mongoose.Schema(
         },
         status: {
             type: String,
-            enum: ["pending", "accepted", "canceled", "completed"],
+            enum: ["pending", "accepted", "arrived-at-pick-up", "pick-up", ,"canceled", "completed"],
             default: "pending",
         },
         vehicle: {
