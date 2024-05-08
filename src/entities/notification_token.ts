@@ -4,11 +4,11 @@ const Schema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Transaction"
+            ref: "Transaction",
         },
         token: {
             type: String,
-        }
+        },
     },
     {
         versionKey: false,
