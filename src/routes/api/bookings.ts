@@ -61,12 +61,12 @@ router.get("/:id", async (req: Request, res: Response) => {
 router.get("/driver-assigned/:id", async (req: Request, res: Response) => {
     let response = null;
     try {
-        console.log("getAssignedDriverBooking")
+        console.log("getAssignedDriverBooking");
         response = await BookingService.getAssignedDriverBooking(req);
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }
     res.status(response.getRetCode()).json(response.getResponse());
-})
+});
 
 export default router;

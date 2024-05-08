@@ -1,10 +1,10 @@
 // ========================================================
 // Set up database and express server
-import * as express from 'express';
-import 'reflect-metadata';
-import databaseInitialize from './app-data-src';
-import 'module-alias/register';
-import * as cors from 'cors';
+import * as express from "express";
+import "reflect-metadata";
+import databaseInitialize from "./app-data-src";
+import "module-alias/register";
+import * as cors from "cors";
 
 const app = express();
 const port = 3000;
@@ -19,24 +19,30 @@ const startServer = async () => {
             console.log(`[Server] Server is running at http://localhost:${port}`);
         });
 
-        const pendingBookings = await Booking.find({ status: 'pending' });
+        const pendingBookings = await Booking.find({ status: "pending" });
 
-       for (const booking of pendingBookings) {
-            if(booking.info instanceof BookingInfo) {
-                if(booking.info.pickup instanceof LocationRecord)
-                {
-                    bookingQueue.push(new BookingWS(booking._id.toString(), booking.info.pickup.location?.coordinates[1],booking.info.pickup.location?.coordinates[0], booking.orderedBy?.toString()));
+        for (const booking of pendingBookings) {
+            if (booking.info instanceof BookingInfo) {
+                if (booking.info.pickup instanceof LocationRecord) {
+                    bookingQueue.push(
+                        new BookingWS(
+                            booking._id.toString(),
+                            booking.info.pickup.location?.coordinates[1],
+                            booking.info.pickup.location?.coordinates[0],
+                            booking.orderedBy?.toString(),
+                            booking.vehicle
+                        )
+                    );
                 }
-
+            } else {
+                bookingQueue.push(
+                    new BookingWS(booking._id.toString(), 0, 0, booking.orderedBy.toString(), booking.vehicle)
+                );
             }
-            else {
-                bookingQueue.push(new BookingWS(booking._id.toString(), 0,0, booking.orderedBy.toString()));
-            }
-
-       }
-       reassignBookingToOtherDrivers();
+        }
+        reassignBookingToOtherDrivers();
     } catch (err) {
-        console.error('[Database] Error: ', err);
+        console.error("[Database] Error: ", err);
     }
 };
 
@@ -44,11 +50,11 @@ startServer();
 
 // ========================================================
 // Set up routes
-import router from './routes';
-import { Request, Response } from 'express';
-import BaseResponse from '@/utils/BaseResponse';
-import { RET_CODE } from '@/utils/ReturnCode';
-import * as jwt from 'jsonwebtoken';
+import router from "./routes";
+import { Request, Response } from "express";
+import BaseResponse from "@/utils/BaseResponse";
+import { RET_CODE } from "@/utils/ReturnCode";
+import * as jwt from "jsonwebtoken";
 
 // Whitelist all as default
 // const whitelist = [
@@ -66,11 +72,11 @@ app.use((req: Request, res: Response, next) => {
     next();
     return;
 
-    const token = req.headers['x-access-token'];
-    
+    const token = req.headers["x-access-token"];
+
     // Check if token is provided
     if (!token) {
-        const response = new BaseResponse(RET_CODE.UNAUTHORIZED, false, 'No token provided');
+        const response = new BaseResponse(RET_CODE.UNAUTHORIZED, false, "No token provided");
         res.status(response.getRetCode()).json(response.getResponse());
         return;
     }
@@ -78,7 +84,7 @@ app.use((req: Request, res: Response, next) => {
     // Check if token is invalid or not
     jwt.verify(token as string, process.env.JWT_SECRET, (err: any) => {
         if (err) {
-            const response = new BaseResponse(RET_CODE.UNAUTHORIZED, false, 'Token is invalid');
+            const response = new BaseResponse(RET_CODE.UNAUTHORIZED, false, "Token is invalid");
             res.status(response.getRetCode()).json(response.getResponse());
         } else {
             next();
@@ -105,8 +111,8 @@ firebaseAdmin.initializeApp({
 
 // ========================================================
 // Websocket handle
-import * as WebSocket from 'ws';
-import { Booking, BookingInfo, LocationRecord } from './entities';
+import * as WebSocket from "ws";
+import { Booking, BookingInfo, LocationRecord } from "./entities";
 
 const wss = new WebSocket.Server({ port: 8080 });
 
@@ -119,8 +125,8 @@ class Driver {
 
     constructor(ws: WebSocket) {
         this.ws = ws;
-        this.status = 'online';
-        this.vehicle = '';
+        this.status = "online";
+        this.vehicle = "";
         this.lat = null;
         this.lng = null;
     }
@@ -140,18 +146,20 @@ class BookingWS {
     bookingId: string;
     lat: number;
     lng: number;
+    vehicle: string;
     userUid: string;
     status: string;
     assignedDriver: Driver | null;
     timeout: NodeJS.Timeout | null;
     listDeny: WebSocket[];
 
-    constructor(bookingId: string, lat: number, lng: number, userUid: string) {
+    constructor(bookingId: string, lat: number, lng: number, userUid: string, vehicle: string) {
         this.bookingId = bookingId;
         this.lat = lat;
         this.lng = lng;
+        this.vehicle = vehicle;
         this.userUid = userUid;
-        this.status = 'pending';
+        this.status = "pending";
         this.assignedDriver = null;
         this.listDeny = [];
         this.timeout = null;
@@ -189,39 +197,46 @@ let bookingQueue: BookingWS[] = [];
 
 const TIMEOUT_DURATION = 10000; // 10 seconds
 
-wss.on('connection', (ws: WebSocket) => {
-    ws.on('message', (message: string) => {
-        const data = JSON.parse(message) as { role: string, event: string, lat?: number, lng?: number, userUid?: string, booking?: any };
+wss.on("connection", (ws: WebSocket) => {
+    ws.on("message", (message: string) => {
+        const data = JSON.parse(message) as {
+            role: string;
+            event: string;
+            lat?: number;
+            lng?: number;
+            userUid?: string;
+            booking?: any;
+        };
         handleDriverMessage(ws, data);
-
     });
 
-    ws.on('close', () => {
+    ws.on("close", () => {
         handleClientDisconnect(ws);
     });
 });
 
-async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: number, lng?: number, booking?: any, vehicle?: string }) {
-    if (data.event === 'driverOnline') {
+async function handleDriverMessage(
+    ws: WebSocket,
+    data: { event: string; lat?: number; lng?: number; booking?: any; vehicle?: string }
+) {
+    if (data.event === "driverOnline") {
         const driver = new Driver(ws);
         onlineDrivers.push(driver);
         reassignBookingToOtherDrivers();
-    } else if (data.event === 'driverOffline') {
-        onlineDrivers = onlineDrivers.filter(driver => driver.ws !== ws);
+    } else if (data.event === "driverOffline") {
+        onlineDrivers = onlineDrivers.filter((driver) => driver.ws !== ws);
         ws.close();
-    } else if (data.event === 'locationUpdate') {
-        const driver = onlineDrivers.find(driver => driver.ws === ws);
+    } else if (data.event === "locationUpdate") {
+        const driver = onlineDrivers.find((driver) => driver.ws === ws);
         if (driver) {
             driver.lat = data.lat || null;
             driver.lng = data.lng || null;
         }
         reassignBookingToOtherDrivers();
-    } else if (data.event === 'bookingResponse') {
+    } else if (data.event === "bookingResponse") {
         handleBookingResponse(data.booking, ws);
-    }
-    else if (data.event === 'updateVehicle')
-    {
-        const driver = onlineDrivers.find(driver => driver.ws === ws);
+    } else if (data.event === "updateVehicle") {
+        const driver = onlineDrivers.find((driver) => driver.ws === ws);
         if (driver) {
             driver.vehicle = data.vehicle;
         }
@@ -237,71 +252,91 @@ async function handleDriverMessage(ws: WebSocket, data: { event: string, lat?: n
 // }
 
 function handleClientDisconnect(ws: WebSocket) {
-    onlineDrivers = onlineDrivers.filter(driver => driver.ws !== ws);
-    onlineCustomers = onlineCustomers.filter(customer => customer.ws !== ws);
+    onlineDrivers = onlineDrivers.filter((driver) => driver.ws !== ws);
+    onlineCustomers = onlineCustomers.filter((customer) => customer.ws !== ws);
 }
 
-
-function handleBookingResponse(data: { bookingId: string, response: string}, ws: WebSocket) {
-    const booking = bookingQueue.find(booking => booking.bookingId === data.bookingId);
+function handleBookingResponse(data: { bookingId: string; response: string }, ws: WebSocket) {
+    const booking = bookingQueue.find((booking) => booking.bookingId === data.bookingId);
     if (booking) {
         if (booking.timeout) {
             clearTimeout(booking.timeout); // Clear the timeout
         }
-        
-        if(data.response === 'accept') {
-            booking.status = 'accepted';
+
+        if (data.response === "accept") {
+            booking.status = "accepted";
 
             // clear driver
-            onlineDrivers = onlineDrivers.filter(driver => driver !== booking.assignedDriver);
+            onlineDrivers = onlineDrivers.filter((driver) => driver !== booking.assignedDriver);
             // clear booking
-            bookingQueue = bookingQueue.filter(book => book !== booking);
+            bookingQueue = bookingQueue.filter((book) => book !== booking);
             // clear timeout
             booking.timeout = null;
         } else {
-            booking.status = 'pending';
-            const driver = onlineDrivers.find(driver => driver.ws === ws);
+            booking.status = "pending";
+            const driver = onlineDrivers.find((driver) => driver.ws === ws);
             if (driver) {
-                driver.status = 'online';
+                driver.status = "online";
             }
-            booking.listDeny.push(ws)
+            booking.listDeny.push(ws);
             reassignBookingToOtherDrivers();
         }
-
-
     }
 }
 
 function handleDriverTimeout(booking: BookingWS) {
-    if (booking.status === 'assigned') {
+    if (booking.status === "assigned") {
         // If the booking is still assigned (driver did not respond within the timeout)
-        booking.status = 'pending'; // Update booking status
-        booking.assignedDriver.ws.send(JSON.stringify({ event: 'bookingTimeout', bookingId: booking.bookingId }));
-        booking.assignedDriver.ws.close()
+        booking.status = "pending"; // Update booking status
+        booking.assignedDriver.ws.send(JSON.stringify({ event: "bookingTimeout", bookingId: booking.bookingId }));
+        booking.assignedDriver.ws.close();
 
-        
         // Reassign the booking to other available drivers
-        onlineDrivers = onlineDrivers.filter(driver => driver !== booking.assignedDriver);
+        onlineDrivers = onlineDrivers.filter((driver) => driver !== booking.assignedDriver);
         reassignBookingToOtherDrivers();
     }
 }
-
-function reassignBookingToOtherDrivers() {
+async function checkDatabase() {
+    try {
+        const pendingBookings = await Booking.find({ status: "pending" });
+        for (const booking of pendingBookings) {
+            if (booking.info instanceof BookingInfo) {
+                if (booking.info.pickup instanceof LocationRecord) {
+                    const find = bookingQueue.find((book) => book.bookingId === booking._id.toString());
+                    if (!find) {
+                        bookingQueue.push(
+                            new BookingWS(
+                                booking._id.toString(),
+                                booking.info.pickup.location?.coordinates[1],
+                                booking.info.pickup.location?.coordinates[0],
+                                booking.orderedBy?.toString(),
+                                booking.vehicle
+                            )
+                        );
+                    }
+                }
+            }
+        }
+    } catch (err) {
+        console.log(err);
+    }
+}
+async function reassignBookingToOtherDrivers() {
+    // await checkDatabase();
     for (let i = 0; i < bookingQueue.length; i++) {
         const booking = bookingQueue[i];
-        if (booking.status === 'pending') {
+        if (booking.status === "pending") {
             const suitableDriver = findSuitableDriver(booking);
             if (suitableDriver) {
-                booking.status = 'assigned';
+                booking.status = "assigned";
                 booking.assignedDriver = suitableDriver;
-                suitableDriver.status = 'assigned';
-                suitableDriver.ws.send(JSON.stringify({ event: 'newBooking', bookingId: booking.bookingId }));
+                suitableDriver.status = "assigned";
+                suitableDriver.ws.send(JSON.stringify({ event: "newBooking", bookingId: booking.bookingId }));
 
                 booking.timeout = setTimeout(() => {
                     handleDriverTimeout(booking);
                 }, TIMEOUT_DURATION);
             }
-
         }
     }
 }
@@ -311,19 +346,27 @@ function reassignBookingToOtherDrivers() {
 function findSuitableDriver(booking: BookingWS): Driver | null {
     let minDistance = Number.MAX_VALUE;
     let suitableDriver = null;
-    onlineDrivers.forEach(driver => {
+    for (const driver of onlineDrivers) {
         // if driver in deny list of booking
-        if(!booking.listDeny.includes(driver.ws))
-        {
-            if (driver.status === 'online' && driver.lat && driver.lng && booking.lat && booking.lng) {
-                const distance = Math.sqrt(Math.pow(booking.lat - driver.lat, 2) + Math.pow(booking.lng - driver.lng, 2));
+        if (!booking.listDeny.includes(driver.ws)) {
+            if (
+                driver.status === "online" &&
+                driver.lat &&
+                driver.lng &&
+                booking.lat &&
+                booking.lng &&
+                driver.vehicle === booking.vehicle
+            ) {
+                const distance = Math.sqrt(
+                    Math.pow(booking.lat - driver.lat, 2) + Math.pow(booking.lng - driver.lng, 2)
+                );
                 if (distance < minDistance) {
                     minDistance = distance;
                     suitableDriver = driver;
                 }
             }
         }
-    });
+    }
     return suitableDriver;
 }
 
@@ -332,18 +375,15 @@ function addBookingToQueue(booking: BookingWS) {
     reassignBookingToOtherDrivers();
 }
 
-function updateBookingWS(bookingId: string, lat: number, lng: number)
-{
+function updateBookingWS(bookingId: string, lat: number, lng: number) {
     for (let i = 0; i < bookingQueue.length; i++) {
         const booking = bookingQueue[i];
         if (booking.bookingId === bookingId) {
-            if(!booking.lat)
-            {
+            if (!booking.lat) {
                 booking.lat = lat;
             }
 
-            if(!booking.lng)
-            {
+            if (!booking.lng) {
                 booking.lng = lng;
             }
         }
@@ -351,9 +391,4 @@ function updateBookingWS(bookingId: string, lat: number, lng: number)
     reassignBookingToOtherDrivers();
 }
 
-
-
-
-
-export { wss, BookingWS, addBookingToQueue, updateBookingWS};
-
+export { wss, BookingWS, addBookingToQueue, updateBookingWS };

@@ -14,5 +14,5 @@ export const TRIP_STATUS = {
     TRIP_FINISHED: {
         title: "Trip finished",
         body: "You have reached your destination",
-    }
-}
+    },
+};
