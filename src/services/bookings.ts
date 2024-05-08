@@ -29,7 +29,13 @@ class BookingService {
             });
 
             await data.save();
-            const dat = new BookingWS(data._id.toString(), req.body.pLat, req.body.pLng, req.body.ordered_by);
+            const dat = new BookingWS(
+                data._id.toString(),
+                req.body.pLat,
+                req.body.pLng,
+                req.body.ordered_by,
+                data.vehicle
+            );
             addBookingToQueue(dat);
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
@@ -239,7 +245,8 @@ class BookingService {
                 data._id.toString(),
                 pickup?.location?.coordinates[1],
                 pickup?.location?.coordinates[0],
-                ordered_by
+                ordered_by,
+                data.vehicle
             );
 
             addBookingToQueue(dat);
@@ -248,6 +255,56 @@ class BookingService {
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getCashIncome(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const data = (await Booking.find({ driver: id, status: "completed" }).populate("info")) as any;
+
+            let total = 0;
+
+            for (const item of data)
+                if (!item.info.transaction) {
+                    total += item.info.fee;
+                }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                total,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getCardIncome(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const data = (await Booking.find({ driver: id, status: "completed" }).populate("info")) as any;
+
+            let total = 0;
+
+            for (const item of data)
+                if (item.info.transaction) {
+                    total += item.info.fee;
+                }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                total,
             });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
