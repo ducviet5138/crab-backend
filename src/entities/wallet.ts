@@ -2,29 +2,25 @@ import mongoose from "mongoose";
 
 const Schema = new mongoose.Schema(
     {
-        ref: {
-            type: String,
-            required: true,
-        },
-        wallet: {
+        user: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Wallet",
+            ref: "User",
             required: true,
         },
         type: {
             type: String,
-            enum: ["DEPOSIT", "WITHDRAWAL", "PAYMENT"],
+            enum: ["cash", "credit"],
             required: true,
         },
         amount: {
             type: Number,
             required: true,
+            default: 0,
         },
     },
     {
         versionKey: false,
-        timestamps: true,
     }
 );
 
-export const Transaction = mongoose.model("Transaction", Schema, "transactions");
+export const Wallet = mongoose.model("Wallet", Schema, "wallets");

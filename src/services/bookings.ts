@@ -9,6 +9,7 @@ import BookingInfoService from "./booking-infos";
 import NotificationService from "./notification";
 import { addBookingToQueue, BookingWS } from "@/app";
 import { TRIP_STATUS } from "@/utils/TripStatus";
+import { PaymentFactory } from "@/class/PaymentFactory";
 
 class BookingService {
     async flatCreate(req: Request) {
@@ -19,8 +20,11 @@ class BookingService {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
             }
 
-            const booking  = await Booking.findOne({ orderedBy: ordered_by, status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"] } });
-            
+            const booking = await Booking.findOne({
+                orderedBy: ordered_by,
+                status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"] },
+            });
+
             if (booking) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "You already have a booking");
             }
@@ -117,12 +121,15 @@ class BookingService {
                             NotificationService.sendNotification(token.token, TRIP_STATUS.PICKUP, data._id.toString());
                             break;
                         }
+                        case "pending-payment": {
+                            break;
+                        }
                         case "completed": {
-                            NotificationService.sendNotification(
-                                token.token,
-                                TRIP_STATUS.TRIP_FINISHED,
-                                data._id.toString()
-                            );
+                            const booking_info = await BookingInfo.findById(data.info);
+                            const payment_method = new PaymentFactory(booking_info.payment_method);
+                            payment_method.pay(data.orderedBy, data.driver, booking_info.fee);
+
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.TRIP_FINISHED, data.id);
                             break;
                         }
                     }
@@ -171,8 +178,7 @@ class BookingService {
         }
     }
 
-    async checkProgressBooking(req: Request)
-    {
+    async checkProgressBooking(req: Request) {
         try {
             const { id, role } = req.body;
             if (!id) {
@@ -185,23 +191,29 @@ class BookingService {
 
             let data = null;
             if (role === "driver") {
-                data = await Booking.findOne({ 
+                data = await Booking.findOne({
                     driver: id,
-                    status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"]}
-                }).populate("info").populate("orderedBy").populate("driver");
-            }else {
-                data = await Booking.findOne({ 
+                    status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"] },
+                })
+                    .populate("info")
+                    .populate("orderedBy")
+                    .populate("driver");
+            } else {
+                data = await Booking.findOne({
                     orderedBy: id,
-                    status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"]}
-                }).populate("info").populate("orderedBy").populate("driver");
+                    status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"] },
+                })
+                    .populate("info")
+                    .populate("orderedBy")
+                    .populate("driver");
             }
 
             if (data) {
                 return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, data);
-            }else {
+            } else {
                 return new BaseResponse(RET_CODE.ERROR, false, "No booking in progress");
             }
-        }catch (_: any) {
+        } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
     }

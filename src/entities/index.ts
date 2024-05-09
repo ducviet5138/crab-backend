@@ -8,3 +8,4 @@ export * from "./payment_method";
 export * from "./transaction";
 export * from "./notification_token";
 export * from "./rating";
+export * from "./wallet";

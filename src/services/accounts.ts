@@ -2,7 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { User, PaymentMethod, Vehicle, Booking } from "@/entities";
+import { User, PaymentMethod, Vehicle, Booking, Wallet } from "@/entities";
 
 import hashPassword from "@/utils/HashPassword";
 import generateJWTToken from "@/utils/GenerateJWTToken";
@@ -31,6 +31,22 @@ class AccountService {
                 password: hashPassword(password),
                 role,
             });
+
+            const credit_wallet = new Wallet({
+                user: data._id,
+                type: "credit",
+                amount: 0,
+            });
+            await credit_wallet.save();
+            data.credit_wallet = credit_wallet._id;
+
+            const cash_wallet = new Wallet({
+                user: data._id,
+                type: "cash",
+                amount: 0,
+            });
+            await cash_wallet.save();
+            data.cash_wallet = cash_wallet._id;
 
             await data.save();
 
@@ -64,6 +80,29 @@ class AccountService {
 
             if (!account) {
                 return new BaseResponse(RET_CODE.ERROR, false, "Phone number or password is invalid");
+            }
+
+            // zero oopsies
+            if (account) {
+                if (!account.credit_wallet) {
+                    const credit_wallet = new Wallet({
+                        user: account._id,
+                        type: "credit",
+                        amount: 0,
+                    });
+                    await credit_wallet.save();
+                    account.credit_wallet = credit_wallet._id;
+                }
+                if (!account.cash_wallet) {
+                    const cash_wallet = new Wallet({
+                        user: account._id,
+                        type: "cash",
+                        amount: 0,
+                    });
+                    await cash_wallet.save();
+                    account.cash_wallet = cash_wallet._id;
+                }
+                await account.save();
             }
 
             // Return JWT token

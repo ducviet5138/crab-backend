@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import AccountService from "@/services/bookings";
+import BookingService from "@/services/bookings";
 
 const router = Express.Router();
 
@@ -12,7 +12,7 @@ const router = Express.Router();
 router.get("/:id/cash-incomes", async (req: Request, res: Response) => {
     let response = null;
     try {
-        response = await AccountService.getCashIncome(req);
+        response = await BookingService.getCashIncome(req);
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }
@@ -24,7 +24,7 @@ router.get("/:id/cash-incomes", async (req: Request, res: Response) => {
 router.get("/:id/card-incomes", async (req: Request, res: Response) => {
     let response = null;
     try {
-        response = await AccountService.getCardIncome(req);
+        response = await BookingService.getCardIncome(req);
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }
@@ -35,7 +35,7 @@ router.get("/:id/card-incomes", async (req: Request, res: Response) => {
 router.get("/:id/vehicle-types", async (req: Request, res: Response) => {
     let response = null;
     try {
-        response = await AccountService.getCardIncome(req);
+        response = await BookingService.getCardIncome(req);
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }

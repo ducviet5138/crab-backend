@@ -32,6 +32,11 @@ const Schema = new mongoose.Schema(
         driver_rating: {
             type: mongoose.Schema.Types.ObjectId,
         },
+        payment_method: {
+            type: String,
+            enum: ["cash", "card"],
+            default: "cash",
+        },
     },
     {
         versionKey: false,
