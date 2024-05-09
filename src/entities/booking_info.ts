@@ -26,6 +26,12 @@ const Schema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Transaction",
         },
+        customer_rating: {
+            type: mongoose.Schema.Types.ObjectId,
+        },
+        driver_rating: {
+            type: mongoose.Schema.Types.ObjectId,
+        },
     },
     {
         versionKey: false,

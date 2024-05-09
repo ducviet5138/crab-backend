@@ -2,7 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord, Booking, User, NotificationToken } from "@/entities";
+import { BookingInfo, LocationRecord, Booking, NotificationToken, Rating } from "@/entities";
 import objectIdConverter from "@/utils/ObjectIdConverter";
 
 import BookingInfoService from "./booking-infos";
@@ -90,32 +90,41 @@ class BookingService {
 
             if (status === "accepted" && !driver) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
-            } else{
+            } else {
                 const token = await NotificationToken.findOne({ user: data.orderedBy });
-                if (token != null)
-                {
-                    switch(status) {
+                if (token != null) {
+                    switch (status) {
                         case "accepted": {
-                            const {driverLat, driverLng} = req.body;
-                            NotificationService.sendNotification(token.token, TRIP_STATUS.DRIVER_COMMING, data._id.toString(), driverLat, driverLng);
+                            const { driverLat, driverLng } = req.body;
+                            NotificationService.sendNotification(
+                                token.token,
+                                TRIP_STATUS.DRIVER_COMMING,
+                                data._id.toString(),
+                                driverLat,
+                                driverLng
+                            );
                             break;
                         }
                         case "arrived-at-pick-up": {
-                            NotificationService.sendNotification(token.token, TRIP_STATUS.DRIVER_ARRIVED, data._id.toString());
+                            NotificationService.sendNotification(
+                                token.token,
+                                TRIP_STATUS.DRIVER_ARRIVED,
+                                data._id.toString()
+                            );
                             break;
-
                         }
                         case "pick-up": {
-                            NotificationService.sendNotification(token.token, TRIP_STATUS.PICKUP,data._id.toString());
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.PICKUP, data._id.toString());
                             break;
-
                         }
                         case "completed": {
-                            NotificationService.sendNotification(token.token, TRIP_STATUS.TRIP_FINISHED, data._id.toString());
+                            NotificationService.sendNotification(
+                                token.token,
+                                TRIP_STATUS.TRIP_FINISHED,
+                                data._id.toString()
+                            );
                             break;
-
                         }
-                    
                     }
                 }
 
@@ -170,11 +179,11 @@ class BookingService {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
             }
 
-            if(!role) {
+            if (!role) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
             }
 
-            let data = null
+            let data = null;
             if (role === "driver") {
                 data = await Booking.findOne({ 
                     driver: id,
@@ -198,7 +207,7 @@ class BookingService {
     }
 
     async getAssignedDriverBooking(req: Request) {
-        const {id} = req.params;
+        const { id } = req.params;
         if (!id) {
             return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
         }
@@ -320,6 +329,100 @@ class BookingService {
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 total,
             });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getPreRatingInfo(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking = (await Booking.findById(id)) as any;
+
+            if (!booking) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                _id: booking?._id,
+                vehicle: booking?.vehicle,
+                service: booking?.service,
+                pick_up: booking?.info?.pickup.address,
+                destination: booking?.info?.destination.address,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async customerRating(req: Request) {
+        try {
+            const { id } = req.params;
+            const { value, comment } = req.body;
+
+            if (!id || !value) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking = (await Booking.findById(id)) as any;
+
+            if (!booking) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
+            }
+
+            const bookingInfo = booking.info as any;
+
+            const customerRating = new Rating({
+                value,
+                comment,
+            });
+
+            await customerRating.save();
+
+            // Update customer rating for booking info
+            bookingInfo.customer_rating = customerRating._id;
+            await bookingInfo.save();
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async driverRating(req: Request) {
+        try {
+            const { id } = req.params;
+            const { value, comment } = req.body;
+
+            if (!id || !value) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking = (await Booking.findById(id)) as any;
+
+            if (!booking) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
+            }
+
+            const booking_info = booking.info as any;
+
+            const driverRating = new Rating({
+                value,
+                comment,
+            });
+
+            await driverRating.save();
+
+            // Update driver rating for booking info
+            booking_info.driver_rating = driverRating._id;
+            await booking_info.save();
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
