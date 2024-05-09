@@ -19,6 +19,6 @@ router.use("/bookings", bookingsRoute);
 router.use("/fee", feeRoute);
 router.use("/firebase", firebaseRoute);
 router.use("/drivers", driverRoute);
-router.use('/notification', notificationRoute)
+router.use('/notification', notificationRoute);
 
 export default router;

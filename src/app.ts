@@ -296,31 +296,31 @@ function handleDriverTimeout(booking: BookingWS) {
         reassignBookingToOtherDrivers();
     }
 }
-async function checkDatabase() {
-    try {
-        const pendingBookings = await Booking.find({ status: "pending" });
-        for (const booking of pendingBookings) {
-            if (booking.info instanceof BookingInfo) {
-                if (booking.info.pickup instanceof LocationRecord) {
-                    const find = bookingQueue.find((book) => book.bookingId === booking._id.toString());
-                    if (!find) {
-                        bookingQueue.push(
-                            new BookingWS(
-                                booking._id.toString(),
-                                booking.info.pickup.location?.coordinates[1],
-                                booking.info.pickup.location?.coordinates[0],
-                                booking.orderedBy?.toString(),
-                                booking.vehicle
-                            )
-                        );
-                    }
-                }
-            }
-        }
-    } catch (err) {
-        // console.log(err);
-    }
-}
+// async function checkDatabase() {
+//     try {
+//         const pendingBookings = await Booking.find({ status: "pending" });
+//         for (const booking of pendingBookings) {
+//             if (booking.info instanceof BookingInfo) {
+//                 if (booking.info.pickup instanceof LocationRecord) {
+//                     const find = bookingQueue.find((book) => book.bookingId === booking._id.toString());
+//                     if (!find) {
+//                         bookingQueue.push(
+//                             new BookingWS(
+//                                 booking._id.toString(),
+//                                 booking.info.pickup.location?.coordinates[1],
+//                                 booking.info.pickup.location?.coordinates[0],
+//                                 booking.orderedBy?.toString(),
+//                                 booking.vehicle
+//                             )
+//                         );
+//                     }
+//                 }
+//             }
+//         }
+//     } catch (err) {
+//         console.log(err);
+//     }
+// }
 async function reassignBookingToOtherDrivers() {
     // await checkDatabase();
     for (let i = 0; i < bookingQueue.length; i++) {
