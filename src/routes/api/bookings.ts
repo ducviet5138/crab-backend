@@ -43,6 +43,22 @@ router.get("/", async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
+
+// GET: /api/bookings/check-progress-booking?id=userId&role=role
+// Desc: Get a booking by id
+router.post("/check-progress-booking", async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await BookingService.checkProgressBooking(req);
+    } catch (_: any) {
+
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse());
+});
+
+
+
 // GET: /api/bookings/:id
 // Desc: Get a booking by id
 router.get("/:id", async (req: Request, res: Response) => {
@@ -56,12 +72,12 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 
+
 // GET: /api/bookings/driver-assigned/:id
 // Desc: Get a driver of the booking
 router.get("/driver-assigned/:id", async (req: Request, res: Response) => {
     let response = null;
     try {
-        console.log("getAssignedDriverBooking")
         response = await BookingService.getAssignedDriverBooking(req);
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
