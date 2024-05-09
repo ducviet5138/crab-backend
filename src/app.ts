@@ -318,7 +318,7 @@ async function checkDatabase() {
             }
         }
     } catch (err) {
-        console.log(err);
+        // console.log(err);
     }
 }
 async function reassignBookingToOtherDrivers() {

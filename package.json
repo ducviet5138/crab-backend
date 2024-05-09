@@ -4,7 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
-        "start": "npm run format && nodemon src/app.ts",
+        "start": "nodemon src/app.ts",
         "lint": "eslint src --ext .ts",
         "lint:fix": "eslint src --ext .ts --fix",
         "prettier": "prettier --write src/**/*.ts",

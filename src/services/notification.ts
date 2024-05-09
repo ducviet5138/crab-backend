@@ -45,10 +45,10 @@ class NotificationService {
             token: token,
         })
         .then((response) => {
-            // console.log("Successfully sent message:", response);
+            console.log("Successfully sent message:", response);
         })
         .catch((error) => {
-            // console.log("Error sending message:", error);
+            console.log("Error sending message:", error);
         });
 
         
