@@ -61,8 +61,44 @@ router.get("/:id", async (req: Request, res: Response) => {
 router.get("/driver-assigned/:id", async (req: Request, res: Response) => {
     let response = null;
     try {
-        console.log("getAssignedDriverBooking");
         response = await BookingService.getAssignedDriverBooking(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse());
+});
+
+
+// GET: /api/bookings/:id/rating/pre-rate-info
+// Desc: Get a rate info of the booking
+router.get("/:id/rating/pre-rating-info", async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await BookingService.getPreRatingInfo(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse());
+});
+
+// POST: /api/bookings/:id/customer-rating
+// Desc: Customer rate a booking
+router.post("/:id/customer-rating", async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await BookingService.customerRating(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse());
+});
+
+// POST: /api/bookings/:id/driver-rating
+// Desc: Driver rate a booking
+router.post("/:id/driver-rating", async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await BookingService.driverRating(req);
     } catch (_: any) {
         response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
     }
