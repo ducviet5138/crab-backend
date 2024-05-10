@@ -19,7 +19,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
-// GET: /api/accounts/sign-in
+// POST: /api/accounts/sign-in
 // Desc: Login
 router.post("/sign-in", async (req: Request, res: Response) => {
     let response = null;
@@ -78,8 +78,8 @@ router.get("/:id/payment-methods", async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
-// GET: /api/accounts/members
-// Desc: Get all members except admin
+// GET: /api/accounts/members?role={role}
+// Desc: Get all members except admin, query by role if needed
 router.get("/members", async (req: Request, res: Response) => {
     let response = null;
     try {

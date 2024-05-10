@@ -23,4 +23,16 @@ router.post("/", async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
+// GET: /api/booking-infos/fees?type=...
+// Desc: Get total fees
+router.get("/fees", async (req: Request, res: Response) => {
+    let response = null;
+    try {
+        response = await BookingInfoService.getTotalFees(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    res.status(response.getRetCode()).json(response.getResponse());
+});
+
 export default router;
