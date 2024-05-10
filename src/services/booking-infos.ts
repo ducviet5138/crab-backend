@@ -31,7 +31,7 @@ class BookingInfoService {
                             type: "Point",
                             coordinates: [pLng, pLat],
                         },
-                        $maxDistance: 25,
+                        $maxDistance: 50,
                     },
                 },
             });
@@ -43,7 +43,7 @@ class BookingInfoService {
                             type: "Point",
                             coordinates: [dLng, dLat],
                         },
-                        $maxDistance: 25,
+                        $maxDistance: 50,
                     },
                 },
             });
