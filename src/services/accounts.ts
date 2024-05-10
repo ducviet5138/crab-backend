@@ -254,8 +254,14 @@ class AccountService {
     }
 
     async getMembers(req: Request) {
+        const { role } = req.query;
         try {
-            const members = await User.find({ role: { $ne: "admin" } });
+            const members = await User.find({
+                role: {
+                    $ne: "admin",
+                    $in: role || ["customer", "staff", "driver"],
+                },
+            });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 data: members,

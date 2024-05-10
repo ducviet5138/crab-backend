@@ -92,22 +92,20 @@ app.use((req: Request, res: Response, next) => {
     });
 });
 
-
-app.use('/', router);
+app.use("/", router);
 
 // ========================================================
 // firebase admin
-import * as firebaseAdmin from 'firebase-admin';
+import * as firebaseAdmin from "firebase-admin";
 import * as firebaseConfig from "./../firebase-config.json";
 
 firebaseAdmin.initializeApp({
     credential: firebaseAdmin.credential.cert({
         projectId: firebaseConfig.project_id,
         clientEmail: firebaseConfig.client_email,
-        privateKey: firebaseConfig.private_key.replace(/\\n/g, '\n')
+        privateKey: firebaseConfig.private_key.replace(/\\n/g, "\n"),
     }),
 });
-
 
 // ========================================================
 // Websocket handle
@@ -340,8 +338,6 @@ async function reassignBookingToOtherDrivers() {
         }
     }
 }
-
-
 
 function findSuitableDriver(booking: BookingWS): Driver | null {
     let minDistance = Number.MAX_VALUE;
