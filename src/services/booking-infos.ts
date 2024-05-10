@@ -2,8 +2,9 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord, Transaction } from "@/entities";
+import { BookingInfo, LocationRecord, Transaction, Booking } from "@/entities";
 import generateTrans from "@/utils/GenerateTrans";
+import { groupBy, mapValues, sumBy } from "lodash";
 
 class BookingInfoService {
     async createWithLatLng(req: Request) {
@@ -143,6 +144,33 @@ class BookingInfoService {
             await data.save();
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getTotalFees(req: Request) {
+        try {
+            const data = (await Booking.find().populate("info")) as any;
+
+            const { type } = req.query;
+
+            let total;
+
+            if (type) {
+                const groupedByDate = groupBy(data, (item) => {
+                    const date = new Date(item.updatedAt);
+                    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+                });
+                const totalPerDate = mapValues(groupedByDate, (items) =>
+                    sumBy(items, (item) => (item.vehicle === type ? item.info.fee : 0))
+                );
+                total = Object.entries(totalPerDate).map(([date, value]) => ({ date, value }));
+            } else {
+                total = data.reduce((acc, cur) => acc + cur.info.fee, 0);
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, total);
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
