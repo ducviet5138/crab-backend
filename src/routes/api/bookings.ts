@@ -71,8 +71,6 @@ router.get("/:id", async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
-
-
 // GET: /api/bookings/driver-assigned/:id
 // Desc: Get a driver of the booking
 router.get("/driver-assigned/:id", async (req: Request, res: Response) => {
