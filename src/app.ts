@@ -239,14 +239,15 @@ async function handleDriverMessage(
             driver.vehicle = data.vehicle;
         }
         console.log("Driver - Vehicle", driver);
-    } else if (data.event == "completeBooking") {
-        const driver = onlineDrivers.find((driver) => driver.ws === ws);
-        console.log("Driver", driver);
-        if (driver) {
-            driver.status = "pending";
-            reassignBookingToOtherDrivers();
-        }
     }
+    // else if (data.event == "completeBooking") {
+    //     const driver = onlineDrivers.find((driver) => driver.ws === ws);
+    //     console.log("Driver", driver);
+    //     if (driver) {
+    //         driver.status = "pending";
+    //         reassignBookingToOtherDrivers();
+    //     }
+    // }
 }
 
 // function handleCustomerMessage(ws: WebSocket, data: { event: string, userUid?: string }) {

@@ -92,6 +92,7 @@ class AccountService {
                     });
                     await credit_wallet.save();
                     account.credit_wallet = credit_wallet._id;
+                    console.log("credit_wallet created");
                 }
                 if (!account.cash_wallet) {
                     const cash_wallet = new Wallet({
@@ -137,6 +138,29 @@ class AccountService {
             if (phone.startsWith("+84")) phone = "0" + phone.slice(3);
 
             const existedAccount = await User.findOne({ phone });
+            const account = await User.findOne({ phone });
+            if (account) {
+                if (!account.credit_wallet) {
+                    const credit_wallet = new Wallet({
+                        user: account._id,
+                        type: "credit",
+                        amount: 0,
+                    });
+                    await credit_wallet.save();
+                    account.credit_wallet = credit_wallet._id;
+                    console.log("credit_wallet created");
+                }
+                if (!account.cash_wallet) {
+                    const cash_wallet = new Wallet({
+                        user: account._id,
+                        type: "cash",
+                        amount: 0,
+                    });
+                    await cash_wallet.save();
+                    account.cash_wallet = cash_wallet._id;
+                }
+                await account.save();
+            }
 
             // Update UID for existed account and return jwt token to client
             if (existedAccount) {
