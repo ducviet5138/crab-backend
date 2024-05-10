@@ -92,6 +92,7 @@ app.use((req: Request, res: Response, next) => {
     });
 });
 
+// ========================================================
 
 app.use('/', router);
 
@@ -392,3 +393,5 @@ function updateBookingWS(bookingId: string, lat: number, lng: number) {
 }
 
 export { wss, BookingWS, addBookingToQueue, updateBookingWS };
+
+
