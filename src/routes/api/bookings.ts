@@ -71,6 +71,20 @@ router.get("/:id", async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
+// GET: /api/bookings/:id/vehilce
+// Desc: Get a booking and driver vehilce
+router.get("/:id/vehicle", async (req: Request, res: Response) => {
+    console.log("GET VEHICLE");
+    let response = null;
+    try {
+        response = await BookingService.getWithVehicle(req);
+    } catch (_: any) {
+        response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+    }
+    console.log(response);
+    res.status(response.getRetCode()).json(response.getResponse());
+});
+
 // GET: /api/bookings/driver-assigned/:id
 // Desc: Get a driver of the booking
 router.get("/driver-assigned/:id", async (req: Request, res: Response) => {

@@ -92,6 +92,7 @@ app.use((req: Request, res: Response, next) => {
     });
 });
 
+
 app.use("/", router);
 
 // ========================================================
@@ -338,7 +339,7 @@ async function reassignBookingToOtherDrivers() {
                 booking.status = "assigned";
                 booking.assignedDriver = suitableDriver;
                 suitableDriver.status = "assigned";
-                suitableDriver.ws.send(JSON.stringify({ event: "newBooking", bookingId: booking.bookingId }));
+                suitableDriver.ws.send(JSON.stringify({ event: "newBooking", bookingId: booking.bookingId, timeOut: TIMEOUT_DURATION }));
 
                 booking.timeout = setTimeout(() => {
                     handleDriverTimeout(booking);
@@ -397,3 +398,5 @@ function updateBookingWS(bookingId: string, lat: number, lng: number) {
 }
 
 export { wss, BookingWS, addBookingToQueue, updateBookingWS };
+
+

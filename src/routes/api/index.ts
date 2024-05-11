@@ -7,7 +7,8 @@ import bookingsRoute from "./bookings";
 import feeRoute from "./fee";
 import firebaseRoute from "./firebase";
 import driverRoute from "./drivers";
-import notificationRoute from "./notification";
+import notificationRoute from './notification';
+import suggestionRoute from './suggestions';
 import bookingInfoRoute from "./booking-infos";
 // import walletRoute from "./wallets";
 
@@ -21,7 +22,8 @@ router.use("/bookings", bookingsRoute);
 router.use("/fee", feeRoute);
 router.use("/firebase", firebaseRoute);
 router.use("/drivers", driverRoute);
-router.use("/notification", notificationRoute);
+router.use('/notification', notificationRoute);
+router.use('/suggestions', suggestionRoute);
 router.use("/booking-infos", bookingInfoRoute);
 // router.use("/wallets", walletRoute);
 
