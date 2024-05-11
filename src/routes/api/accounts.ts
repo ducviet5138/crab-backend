@@ -32,8 +32,8 @@ router.post("/sign-in", async (req: Request, res: Response) => {
 });
 
 // GET: /api/accounts/get-user
-// Desc: Register in mobile app
-router.post("/get-user", async (req: Request, res: Response) => {
+// Desc: 🍞
+router.get("/get-user/:phone", async (req: Request, res: Response) => {
     let response = null;
     try {
         response = await AccountService.getUserData(req);

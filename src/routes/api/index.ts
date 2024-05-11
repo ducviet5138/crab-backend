@@ -10,6 +10,7 @@ import driverRoute from "./drivers";
 import notificationRoute from './notification';
 import suggestionRoute from './suggestions';
 import bookingInfoRoute from "./booking-infos";
+// import walletRoute from "./wallets";
 
 const router = Express.Router();
 
@@ -24,5 +25,6 @@ router.use("/drivers", driverRoute);
 router.use('/notification', notificationRoute);
 router.use('/suggestions', suggestionRoute);
 router.use("/booking-infos", bookingInfoRoute);
+// router.use("/wallets", walletRoute);
 
 export default router;

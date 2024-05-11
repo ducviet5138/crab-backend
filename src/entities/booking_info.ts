@@ -28,9 +28,16 @@ const Schema = new mongoose.Schema(
         },
         customer_rating: {
             type: mongoose.Schema.Types.ObjectId,
+            ref: "Rating",
         },
         driver_rating: {
             type: mongoose.Schema.Types.ObjectId,
+            ref: "Rating",
+        },
+        payment_method: {
+            type: String,
+            enum: ["cash", "card"],
+            default: "cash",
         },
     },
     {
@@ -39,11 +46,11 @@ const Schema = new mongoose.Schema(
 );
 
 Schema.pre("find", function () {
-    this.populate("pickup").populate("destination");
+    this.populate("pickup").populate("destination").populate("customer_rating").populate("driver_rating");
 });
 
 Schema.pre("findOne", function () {
-    this.populate("pickup").populate("destination");
+    this.populate("pickup").populate("destination").populate("customer_rating").populate("driver_rating");
 });
 
 export const BookingInfo = mongoose.model("BookingInfo", Schema, "booking_infos");

@@ -28,6 +28,14 @@ const Schema = new mongoose.Schema(
                 ref: "PaymentMethod",
             },
         ],
+        credit_wallet: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Wallet",
+        },
+        cash_wallet: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Wallet",
+        },
     },
     {
         versionKey: false,
