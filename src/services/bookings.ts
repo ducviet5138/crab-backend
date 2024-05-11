@@ -2,12 +2,14 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord, Booking } from "@/entities";
+import { BookingInfo, LocationRecord, Booking, NotificationToken, Rating, Vehicle, User } from "@/entities";
 import objectIdConverter from "@/utils/ObjectIdConverter";
 
 import BookingInfoService from "./booking-infos";
-
+import NotificationService from "./notification";
 import { addBookingToQueue, BookingWS } from "@/app";
+import { TRIP_STATUS } from "@/utils/TripStatus";
+import { PaymentFactory } from "@/class/PaymentFactory";
 
 class BookingService {
     async flatCreate(req: Request) {
@@ -16,6 +18,15 @@ class BookingService {
 
             if (!ordered_by) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking = await Booking.findOne({
+                orderedBy: ordered_by,
+                status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"] },
+            });
+
+            if (booking) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "You already have a booking");
             }
 
             const booking_info = await BookingInfoService.createWithLatLng(req);
@@ -28,7 +39,13 @@ class BookingService {
             });
 
             await data.save();
-            const dat = new BookingWS(data._id.toString(), req.body.pLat, req.body.pLng, req.body.ordered_by);
+            const dat = new BookingWS(
+                data._id.toString(),
+                req.body.pLat,
+                req.body.pLng,
+                req.body.ordered_by,
+                data.vehicle
+            );
             addBookingToQueue(dat);
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
@@ -77,7 +94,47 @@ class BookingService {
 
             if (status === "accepted" && !driver) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
-            } else if (status === "accepted") {
+            } else {
+                const token = await NotificationToken.findOne({ user: data.orderedBy });
+                if (token != null) {
+                    switch (status) {
+                        case "accepted": {
+                            const { driverLat, driverLng } = req.body;
+                            NotificationService.sendNotification(
+                                token.token,
+                                TRIP_STATUS.DRIVER_COMMING,
+                                data._id.toString(),
+                                driverLat,
+                                driverLng
+                            );
+                            break;
+                        }
+                        case "arrived-at-pick-up": {
+                            NotificationService.sendNotification(
+                                token.token,
+                                TRIP_STATUS.DRIVER_ARRIVED,
+                                data._id.toString()
+                            );
+                            break;
+                        }
+                        case "pick-up": {
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.PICKUP, data._id.toString());
+                            break;
+                        }
+                        case "pending-payment": {
+                            break;
+                        }
+                        case "completed": {
+                            const booking_info = await BookingInfo.findById(data.info);
+                            const payment_method = new PaymentFactory(booking_info.payment_method);
+                            payment_method.pay(data.orderedBy, data.driver, booking_info.fee);
+
+                            NotificationService.sendNotification(token.token, TRIP_STATUS.TRIP_FINISHED, data.id);
+                            break;
+                        }
+                    }
+                }
+
                 data.driver = driver;
             }
 
@@ -111,6 +168,55 @@ class BookingService {
         }
     }
 
+    async getWithVehicle(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const data = await Booking.findById(id).populate("info").populate("orderedBy").populate("driver");
+            const vehicle = await Vehicle.findOne({ user: data?.driver });
+
+
+            if (!data) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking info");
+            }
+            let rate_driver = 0;
+            if (data.driver instanceof User) {
+                const bookings = await Booking.find({ driver: data.driver._id }).populate("info")
+                let total = 0;
+                let length = 0;
+                for (const item of bookings) {
+                    if(item.info instanceof BookingInfo)
+                    {
+                        if(item.info.customer_rating)
+                        {
+                            const rate = await Rating.findById(item.info.customer_rating);
+                            if(rate)
+                            {
+                                total += rate.value;
+                                length++;
+                            }
+                        }
+                    }
+                }
+                if(length > 0)
+                    rate_driver = total / length;
+
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                booking: data,
+                vehicleInfo: vehicle,
+                rateDriver: rate_driver
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
     async list() {
         try {
             const data = await Booking.find().populate("info").populate("orderedBy").populate("driver");
@@ -119,6 +225,55 @@ class BookingService {
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }
+    }
+
+    async checkProgressBooking(req: Request) {
+        try {
+            const { id, role } = req.body;
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            if (!role) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            let data = null;
+            if (role === "driver") {
+                data = await Booking.findOne({
+                    driver: id,
+                    status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"] },
+                })
+                    .populate("info")
+                    .populate("orderedBy")
+                    .populate("driver");
+            } else {
+                data = await Booking.findOne({
+                    orderedBy: id,
+                    status: { $in: ["pending", "accepted", "arrived-at-pick-up", "pick-up"] },
+                })
+                    .populate("info")
+                    .populate("orderedBy")
+                    .populate("driver");
+            }
+
+            if (data) {
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, data);
+            } else {
+                return new BaseResponse(RET_CODE.ERROR, false, "No booking in progress");
+            }
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getAssignedDriverBooking(req: Request) {
+        const { id } = req.params;
+        if (!id) {
+            return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+        }
+        const booking = await Booking.findById(id).populate("driver");
+        return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, booking.driver);
     }
 
     async createByStaff(req: Request) {
@@ -165,6 +320,7 @@ class BookingService {
                 info: bookingInfo._id,
                 orderedBy: objectIdConverter(ordered_by),
                 vehicle,
+                service: vehicle === "car" ? "Car" : "Bike",
             });
 
             const pickup = await LocationRecord.findById(pickUpId);
@@ -173,7 +329,8 @@ class BookingService {
                 data._id.toString(),
                 pickup?.location?.coordinates[1],
                 pickup?.location?.coordinates[0],
-                ordered_by
+                ordered_by,
+                data.vehicle
             );
 
             addBookingToQueue(dat);
@@ -183,6 +340,152 @@ class BookingService {
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 _id: data._id,
             });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getCashIncome(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const data = (await Booking.find({ driver: id, status: "completed" }).populate("info")) as any;
+
+            let total = 0;
+
+            for (const item of data)
+                if (!item.info.transaction) {
+                    total += item.info.fee;
+                }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                total,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getCardIncome(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const data = (await Booking.find({ driver: id, status: "completed" }).populate("info")) as any;
+
+            let total = 0;
+
+            for (const item of data)
+                if (item.info.transaction) {
+                    total += item.info.fee;
+                }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                total,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getPreRatingInfo(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking = (await Booking.findById(id)) as any;
+
+            if (!booking) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                _id: booking?._id,
+                vehicle: booking?.vehicle,
+                service: booking?.service,
+                pick_up: booking?.info?.pickup.address,
+                destination: booking?.info?.destination.address,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async customerRating(req: Request) {
+        try {
+            const { id } = req.params;
+            const { value, comment } = req.body;
+
+            if (!id || !value) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking = await Booking.findById(id);
+
+            if (!booking) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
+            }
+
+            const bookingInfo = booking.info as any;
+
+            const customerRating = new Rating({
+                value,
+                comment,
+                booking: booking.orderedBy,
+            });
+
+            await customerRating.save();
+
+            // Update customer rating for booking info
+            bookingInfo.customer_rating = customerRating._id;
+            await bookingInfo.save();
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async driverRating(req: Request) {
+        try {
+            const { id } = req.params;
+            const { value, comment } = req.body;
+
+            if (!id || !value) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const booking = await Booking.findById(id);
+
+            if (!booking) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
+            }
+
+            const booking_info = booking.info as any;
+
+            const driverRating = new Rating({
+                value,
+                comment,
+                booking: booking.driver,
+            });
+
+            await driverRating.save();
+
+            // Update driver rating for booking info
+            booking_info.driver_rating = driverRating._id;
+            await booking_info.save();
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }

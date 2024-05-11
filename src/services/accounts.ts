@@ -2,7 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { User, PaymentMethod } from "@/entities";
+import { User, PaymentMethod, Vehicle, Booking, Wallet } from "@/entities";
 
 import hashPassword from "@/utils/HashPassword";
 import generateJWTToken from "@/utils/GenerateJWTToken";
@@ -32,6 +32,22 @@ class AccountService {
                 role,
             });
 
+            const credit_wallet = new Wallet({
+                user: data._id,
+                type: "credit",
+                amount: 0,
+            });
+            await credit_wallet.save();
+            data.credit_wallet = credit_wallet._id;
+
+            const cash_wallet = new Wallet({
+                user: data._id,
+                type: "cash",
+                amount: 0,
+            });
+            await cash_wallet.save();
+            data.cash_wallet = cash_wallet._id;
+
             await data.save();
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
@@ -49,14 +65,44 @@ class AccountService {
 
             if (!role) role = "customer";
 
-            const account = await User.findOne({
+            let account = await User.findOne({
                 phone,
                 role,
                 password: hashPassword(password),
             });
 
+            if (!account && role == "staff")
+                account = await User.findOne({
+                    phone,
+                    role: "admin",
+                    password: hashPassword(password),
+                });
+
             if (!account) {
                 return new BaseResponse(RET_CODE.ERROR, false, "Phone number or password is invalid");
+            }
+
+            // zero oopsies
+            if (account) {
+                if (!account.credit_wallet) {
+                    const credit_wallet = new Wallet({
+                        user: account._id,
+                        type: "credit",
+                        amount: 0,
+                    });
+                    await credit_wallet.save();
+                    account.credit_wallet = credit_wallet._id;
+                }
+                if (!account.cash_wallet) {
+                    const cash_wallet = new Wallet({
+                        user: account._id,
+                        type: "cash",
+                        amount: 0,
+                    });
+                    await cash_wallet.save();
+                    account.cash_wallet = cash_wallet._id;
+                }
+                await account.save();
             }
 
             // Return JWT token
@@ -90,9 +136,8 @@ class AccountService {
             // Format phone number from +84xxxxxxxxx to 0xxxxxxxxx
             if (phone.startsWith("+84")) phone = "0" + phone.slice(3);
 
-            const existedAccount = await User.findOne({ phone });
-
             // Update UID for existed account and return jwt token to client
+            const existedAccount = await User.findOne({ phone });
             if (existedAccount) {
                 existedAccount.firebaseUID = UID;
                 await existedAccount.save();
@@ -120,6 +165,29 @@ class AccountService {
 
             await data.save();
 
+            const account = await User.findOne({ phone });
+            if (account) {
+                if (!account.credit_wallet) {
+                    const credit_wallet = new Wallet({
+                        user: account._id,
+                        type: "credit",
+                        amount: 0,
+                    });
+                    await credit_wallet.save();
+                    account.credit_wallet = credit_wallet._id;
+                }
+                if (!account.cash_wallet) {
+                    const cash_wallet = new Wallet({
+                        user: account._id,
+                        type: "cash",
+                        amount: 0,
+                    });
+                    await cash_wallet.save();
+                    account.cash_wallet = cash_wallet._id;
+                }
+                await account.save();
+            }
+
             // Return JWT token
             const token = generateJWTToken({
                 _id: data._id.toString(),
@@ -139,14 +207,10 @@ class AccountService {
 
     async getUserData(req: Request) {
         try {
-            const { phone } = req.body;
-            let { role } = req.body;
-
-            if (!role) role = "customer";
+            const { phone } = req.params;
 
             const account = await User.findOne({
                 phone,
-                role,
             }).select("-password");
 
             if (!account) {
@@ -247,12 +311,127 @@ class AccountService {
     }
 
     async getMembers(req: Request) {
+        const { role } = req.query;
         try {
-            const members = await User.find({ role: { $ne: "admin" } });
+            const members = await User.find({
+                role: {
+                    $ne: "admin",
+                    $in: role || ["customer", "staff", "driver"],
+                },
+            });
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
                 data: members,
             });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async addOrUpdateVehicle(req: Request) {
+        try {
+            const { id } = req.params;
+            const { plate, type, description } = req.body;
+
+            const vehicle = await Vehicle.findOne({ user: objectIdConverter(id) });
+
+            // If vehicle is not existed, create new one
+            if (!vehicle) {
+                const newVehicle = new Vehicle({
+                    user: objectIdConverter(id),
+                    plate,
+                    type,
+                    description,
+                });
+
+                await newVehicle.save();
+
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    user: newVehicle.user,
+                    plate: newVehicle.plate,
+                    type: newVehicle.type,
+                    description: newVehicle.description,
+                });
+            } else {
+                // Update vehicle if it's already existed
+                vehicle.plate = plate;
+                vehicle.type = type;
+                vehicle.description = description;
+
+                await vehicle.save();
+
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    user: vehicle.user,
+                    plate: vehicle.plate,
+                    type: vehicle.type,
+                    description: vehicle.description,
+                });
+            }
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getVehicles(req: Request) {
+        try {
+            const { id } = req.params;
+
+            const vehicle = await Vehicle.findOne({ user: objectIdConverter(id) });
+
+            // If vehicle is not existed, return "" in all fields
+            if (!vehicle) {
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    user: "",
+                    plate: "",
+                    type: "",
+                    description: "",
+                });
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                user: vehicle.user,
+                plate: vehicle.plate,
+                type: vehicle.type,
+                description: vehicle.description,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async validateVehicle(req: Request) {
+        try {
+            const { id } = req.params;
+
+            const vehicle = await Vehicle.findOne({ user: objectIdConverter(id) });
+
+            if (!vehicle) {
+                return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                    data: false,
+                });
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                data: true,
+            });
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getHistory(req: Request) {
+        try {
+            const { id } = req.params;
+
+            // either orderedBy or driver
+            const data = await Booking.find({
+                $or: [{ orderedBy: objectIdConverter(id) }, { driver: objectIdConverter(id) }],
+            })
+                .populate("info")
+                .populate("orderedBy")
+                .populate("driver");
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, data);
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }

@@ -1,18 +1,18 @@
-import * as Express from 'express';
-import { Request, Response } from 'express';
-import BaseResponse from '@/utils/BaseResponse';
-import { RET_CODE, RET_MSG } from '@/utils/ReturnCode';
-import { Bucket } from '@/entities';
-import upload from '@/services/multer';
-import objectIdConverter from '@/utils/ObjectIdConverter';
-import { createReadStream } from 'fs';
-import * as fs from 'fs/promises';
+import * as Express from "express";
+import { Request, Response } from "express";
+import BaseResponse from "@/utils/BaseResponse";
+import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
+import { Bucket } from "@/entities";
+import upload from "@/services/multer";
+import objectIdConverter from "@/utils/ObjectIdConverter";
+import { createReadStream } from "fs";
+import * as fs from "fs/promises";
 
 const router = Express.Router();
 
 // PUT: /api/files
 // Desc: Upload a file
-router.put('/', upload.single('file'), async (req: Request, res: Response) => {
+router.put("/", upload.single("file"), async (req: Request, res: Response) => {
     try {
         if (!req.file) {
             const response = new BaseResponse(RET_CODE.ERROR, false, RET_MSG.BAD_REQUEST);
@@ -41,10 +41,9 @@ router.put('/', upload.single('file'), async (req: Request, res: Response) => {
     }
 });
 
-
 // GET: /api/files/:id
 // Desc: Get all files
-router.get('/:id', async (req: Request, res: Response) => {
+router.get("/:id", async (req: Request, res: Response) => {
     try {
         const id = req.params.id;
 
@@ -62,7 +61,7 @@ router.get('/:id', async (req: Request, res: Response) => {
         }
 
         // Create a read stream
-        res.setHeader('Content-Disposition', `inline; filename=${entity.fileName}`);
+        res.setHeader("Content-Disposition", `inline; filename=${entity.fileName}`);
         const readStream = createReadStream(`./my_bucket/${entity._id}`);
         readStream.pipe(res);
     } catch (_: any) {
@@ -73,7 +72,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
 // DELETE: /api/files
 // Desc: Delete a file
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response) => {
     try {
         const id = req.params.id;
 
@@ -98,7 +97,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 
         // Delete the file in storage
         await fs.unlink(`./my_bucket/${entity._id}`);
-        
+
         const response = new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
         res.json(response.getResponse());
     } catch (_: any) {

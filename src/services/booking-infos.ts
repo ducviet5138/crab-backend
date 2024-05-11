@@ -2,12 +2,23 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord } from "@/entities";
+import { BookingInfo, LocationRecord, Transaction, Booking } from "@/entities";
+import generateTrans from "@/utils/GenerateTrans";
+import { groupBy, mapValues, sumBy } from "lodash";
 
 class BookingInfoService {
     async createWithLatLng(req: Request) {
         try {
-            const { pLat, pLng, dLat, dLng, pAddress, dAddress, name, phone, fee } = req.body;
+            const { pLat, pLng, dLat, dLng, pAddress, dAddress, name, phone, fee, distance } = req.body;
+
+            const { visa } = req.body;
+            let ref = null;
+            if (visa) {
+                ref = new Transaction({
+                    ref: generateTrans(),
+                });
+                await ref.save();
+            }
 
             if (!pLat || !pLng || !dLat || !dLng || !pAddress || !dAddress || !name || !phone) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
@@ -21,7 +32,7 @@ class BookingInfoService {
                             type: "Point",
                             coordinates: [pLng, pLat],
                         },
-                        $maxDistance: 25,
+                        $maxDistance: 50,
                     },
                 },
             });
@@ -33,7 +44,7 @@ class BookingInfoService {
                             type: "Point",
                             coordinates: [dLng, dLat],
                         },
-                        $maxDistance: 25,
+                        $maxDistance: 50,
                     },
                 },
             });
@@ -68,6 +79,8 @@ class BookingInfoService {
                 pickup: pLocation,
                 destination: dLocation,
                 fee: fee,
+                transaction: ref ? ref._id : null,
+                distance: distance ? distance : 0,
             });
 
             await data.save();
@@ -131,6 +144,33 @@ class BookingInfoService {
             await data.save();
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS);
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getTotalFees(req: Request) {
+        try {
+            const data = (await Booking.find().populate("info")) as any;
+
+            const { type } = req.query;
+
+            let total;
+
+            if (type) {
+                const groupedByDate = groupBy(data, (item) => {
+                    const date = new Date(item.updatedAt);
+                    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+                });
+                const totalPerDate = mapValues(groupedByDate, (items) =>
+                    sumBy(items, (item) => (item.vehicle === type ? item.info.fee : 0))
+                );
+                total = Object.entries(totalPerDate).map(([date, value]) => ({ date, value }));
+            } else {
+                total = data.reduce((acc, cur) => acc + cur.info.fee, 0);
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, total);
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }

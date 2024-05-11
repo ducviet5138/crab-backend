@@ -5,3 +5,7 @@ export * from "./location_record";
 export * from "./booking_info";
 export * from "./booking";
 export * from "./payment_method";
+export * from "./transaction";
+export * from "./notification_token";
+export * from "./rating";
+export * from "./wallet";
