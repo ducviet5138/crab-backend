@@ -288,6 +288,7 @@ function handleDriverTimeout(booking: BookingWS) {
         // If the booking is still assigned (driver did not respond within the timeout)
         booking.status = "pending"; // Update booking status
         booking.assignedDriver.ws.send(JSON.stringify({ event: "bookingTimeout", bookingId: booking.bookingId }));
+        console.log("Driver timeout")
         booking.assignedDriver.ws.close();
 
         // Reassign the booking to other available drivers
@@ -330,7 +331,7 @@ async function reassignBookingToOtherDrivers() {
                 booking.status = "assigned";
                 booking.assignedDriver = suitableDriver;
                 suitableDriver.status = "assigned";
-                suitableDriver.ws.send(JSON.stringify({ event: "newBooking", bookingId: booking.bookingId }));
+                suitableDriver.ws.send(JSON.stringify({ event: "newBooking", bookingId: booking.bookingId, timeOut: TIMEOUT_DURATION }));
 
                 booking.timeout = setTimeout(() => {
                     handleDriverTimeout(booking);

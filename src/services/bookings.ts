@@ -2,7 +2,7 @@ import { Request } from "express";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE, RET_MSG } from "@/utils/ReturnCode";
 
-import { BookingInfo, LocationRecord, Booking, NotificationToken, Rating } from "@/entities";
+import { BookingInfo, LocationRecord, Booking, NotificationToken, Rating, Vehicle, User } from "@/entities";
 import objectIdConverter from "@/utils/ObjectIdConverter";
 
 import BookingInfoService from "./booking-infos";
@@ -156,6 +156,55 @@ class BookingService {
             }
 
             return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, data);
+        } catch (_: any) {
+            return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
+        }
+    }
+
+    async getWithVehicle(req: Request) {
+        try {
+            const { id } = req.params;
+
+            if (!id) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
+            }
+
+            const data = await Booking.findById(id).populate("info").populate("orderedBy").populate("driver");
+            const vehicle = await Vehicle.findOne({ user: data?.driver });
+
+
+            if (!data) {
+                return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking info");
+            }
+            let rate_driver = 0;
+            if (data.driver instanceof User) {
+                const bookings = await Booking.find({ driver: data.driver._id }).populate("info")
+                let total = 0;
+                let length = 0;
+                for (const item of bookings) {
+                    if(item.info instanceof BookingInfo)
+                    {
+                        if(item.info.customer_rating)
+                        {
+                            const rate = await Rating.findById(item.info.customer_rating);
+                            if(rate)
+                            {
+                                total += rate.value;
+                                length++;
+                            }
+                        }
+                    }
+                }
+                if(length > 0)
+                    rate_driver = total / length;
+
+            }
+
+            return new BaseResponse(RET_CODE.SUCCESS, true, RET_MSG.SUCCESS, {
+                booking: data,
+                vehicleInfo: vehicle,
+                rateDriver: rate_driver
+            });
         } catch (_: any) {
             return new BaseResponse(RET_CODE.ERROR, false, RET_MSG.ERROR);
         }

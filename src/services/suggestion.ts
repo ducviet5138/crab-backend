@@ -38,18 +38,15 @@ async function getRecommendations(city: string, type: string) {
         //https://maps.googleapis.com/maps/api/geocode/json
         let urlGeo = `https://maps.googleapis.com/maps/api/geocode/json?address=${city}&key=${process.env.API_KEY}`;
         const responseGeo = await axios.get(urlGeo);
-        console.log(responseGeo.data);
         const dataGeo = responseGeo.data;
         const location = dataGeo.results[0].geometry.location;
         const latitude = location.lat;
         const longitude = location.lng;
         
-        console.log("latitude: ", latitude);
-        console.log("longitude: ", longitude);
+     
 
         if(!type) type= "point_of_interest"
         
-        console.log("type: ", type);
         //https://maps.googleapis.com/maps/api/place/nearbysearch/json
         let url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${latitude},${longitude}&radius=1500&type=${type}&key=${process.env.API_KEY}`;
         
@@ -66,10 +63,9 @@ async function getRecommendations(city: string, type: string) {
                 result.geometry.location.lng,
                 result.rating,
                 result.user_ratings_total,
-                result.photos ? df_url_img +  result.photos[0].photo_reference : null
+                result.photos ? df_url_img +  result.photos[0].photo_reference + `&maxwidth=600&key=${process.env.API_KEY}`:  ""
             )
         });
-        console.log("in city ", city);
         return recommendations;
     }
     catch(error) {
@@ -110,7 +106,6 @@ class SuggestionService {
     async chatGPT(prompt: string) {
         try {
             const messages = JSON.parse(prompt);
-        console.log(messages[0]);
         const tools = [
             {
                 "type": "function",
@@ -145,13 +140,14 @@ class SuggestionService {
         }
         
         const response = await openai.chat.completions.create(config);
-        console.log(response.choices[0].message.tool_calls);
-        const toolCalls = response.choices[0].message.tool_calls;
-        const toolCall = toolCalls[0];
-        const arg = JSON.parse(toolCall.function.arguments);
-        console.log(arg);
-        const recommendations = await getRecommendations(arg.address, arg.type);
-        console.log(recommendations);
+        let recommendations = [];
+    
+        if(response.choices[0].finish_reason == "tool_calls") {
+            const toolCalls = response.choices[0].message.tool_calls;
+            const toolCall = toolCalls[0];
+            const arg = JSON.parse(toolCall.function.arguments);
+            recommendations = await getRecommendations(arg.address, arg.type);
+        }
         const message = await openai.chat.completions.create(
             {
                 model: "gpt-3.5-turbo",
