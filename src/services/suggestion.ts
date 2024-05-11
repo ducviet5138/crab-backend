@@ -4,7 +4,7 @@ import axios from "axios";
 import { listType } from "@/utils/ListType";
 import BaseResponse from "@/utils/BaseResponse";
 import { RET_CODE } from "@/utils/ReturnCode";
-let API_KEY = "sk-proj-cJnOuS8iUhxtlsacSd8dT3BlbkFJSIcfcINYtQl0gP8dGxyg";
+let API_KEY = process.env.API_AI_KEY;
 
 
 const openai = new OpenAI({
