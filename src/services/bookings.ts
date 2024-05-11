@@ -381,7 +381,7 @@ class BookingService {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
             }
 
-            const booking = (await Booking.findById(id)) as any;
+            const booking = await Booking.findById(id);
 
             if (!booking) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
@@ -392,6 +392,7 @@ class BookingService {
             const customerRating = new Rating({
                 value,
                 comment,
+                booking: booking.orderedBy,
             });
 
             await customerRating.save();
@@ -415,7 +416,7 @@ class BookingService {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
             }
 
-            const booking = (await Booking.findById(id)) as any;
+            const booking = await Booking.findById(id);
 
             if (!booking) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid booking");
@@ -426,6 +427,7 @@ class BookingService {
             const driverRating = new Rating({
                 value,
                 comment,
+                booking: booking.driver,
             });
 
             await driverRating.save();

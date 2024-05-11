@@ -1,5 +1,17 @@
 import mongoose from "mongoose";
 
+export const TRANSACTION_TYPES = [
+    "DEPOSIT",
+    "WITHDRAWAL",
+    "PAYMENT",
+    "REFUND",
+    "REVERSAL",
+    "BONUS",
+    "PENALTY",
+    "FEE",
+    "OTHERS",
+];
+
 const Schema = new mongoose.Schema(
     {
         ref: {
@@ -13,7 +25,7 @@ const Schema = new mongoose.Schema(
         },
         type: {
             type: String,
-            enum: ["DEPOSIT", "WITHDRAWAL", "PAYMENT"],
+            enum: TRANSACTION_TYPES,
             required: true,
         },
         amount: {
@@ -26,5 +38,12 @@ const Schema = new mongoose.Schema(
         timestamps: true,
     }
 );
+
+Schema.pre("save", function (next) {
+    if (this.type === "WITHDRAWAL" || this.type === "FEE") {
+        this.amount = -Math.abs(this.amount);
+    }
+    next();
+});
 
 export const Transaction = mongoose.model("Transaction", Schema, "transactions");

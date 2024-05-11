@@ -9,6 +9,7 @@ import firebaseRoute from "./firebase";
 import driverRoute from "./drivers";
 import notificationRoute from "./notification";
 import bookingInfoRoute from "./booking-infos";
+// import walletRoute from "./wallets";
 
 const router = Express.Router();
 
@@ -22,5 +23,6 @@ router.use("/firebase", firebaseRoute);
 router.use("/drivers", driverRoute);
 router.use("/notification", notificationRoute);
 router.use("/booking-infos", bookingInfoRoute);
+// router.use("/wallets", walletRoute);
 
 export default router;
