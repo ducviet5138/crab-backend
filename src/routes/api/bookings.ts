@@ -71,8 +71,8 @@ router.get("/:id", async (req: Request, res: Response) => {
     res.status(response.getRetCode()).json(response.getResponse());
 });
 
-// GET: /api/bookings/:id
-// Desc: Get a booking by id
+// GET: /api/bookings/:id/vehilce
+// Desc: Get a booking and driver vehilce
 router.get("/:id/vehicle", async (req: Request, res: Response) => {
     console.log("GET VEHICLE");
     let response = null;

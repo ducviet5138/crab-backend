@@ -93,7 +93,7 @@ app.use((req: Request, res: Response, next) => {
 });
 
 
-app.use('/', router);
+app.use("/", router);
 
 // ========================================================
 // firebase admin
@@ -288,7 +288,6 @@ function handleDriverTimeout(booking: BookingWS) {
         // If the booking is still assigned (driver did not respond within the timeout)
         booking.status = "pending"; // Update booking status
         booking.assignedDriver.ws.send(JSON.stringify({ event: "bookingTimeout", bookingId: booking.bookingId }));
-        console.log("Driver timeout")
         booking.assignedDriver.ws.close();
 
         // Reassign the booking to other available drivers
