@@ -12,14 +12,7 @@ class BookingInfoService {
             const { pLat, pLng, dLat, dLng, pAddress, dAddress, name, phone, fee, distance } = req.body;
 
             const { visa } = req.body;
-            let ref = null;
-            if (visa) {
-                ref = new Transaction({
-                    ref: generateTrans(),
-                });
-                await ref.save();
-            }
-
+            console.log(visa);
             if (!pLat || !pLng || !dLat || !dLng || !pAddress || !dAddress || !name || !phone) {
                 return new BaseResponse(RET_CODE.BAD_REQUEST, false, "Invalid request");
             }
@@ -79,8 +72,9 @@ class BookingInfoService {
                 pickup: pLocation,
                 destination: dLocation,
                 fee: fee,
-                transaction: ref ? ref._id : null,
+                transaction: null,
                 distance: distance ? distance : 0,
+                payment_method: visa ? "card" : "cash",
             });
 
             await data.save();

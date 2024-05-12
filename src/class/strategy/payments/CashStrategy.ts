@@ -16,7 +16,7 @@ export class CashStrategy implements IPaymentStrategy {
 
         const transactionB = new Transaction({
             ref: "FEE" + generateTrans(),
-            amount: amount * 0.2,
+            amount: amount,
             type: "FEE",
             wallet: driverInstance.credit_wallet,
         });

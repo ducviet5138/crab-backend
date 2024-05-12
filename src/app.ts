@@ -92,7 +92,6 @@ app.use((req: Request, res: Response, next) => {
     });
 });
 
-
 app.use("/", router);
 
 // ========================================================
@@ -239,16 +238,7 @@ async function handleDriverMessage(
         if (driver) {
             driver.vehicle = data.vehicle;
         }
-        console.log("Driver - Vehicle", driver);
     }
-    // else if (data.event == "completeBooking") {
-    //     const driver = onlineDrivers.find((driver) => driver.ws === ws);
-    //     console.log("Driver", driver);
-    //     if (driver) {
-    //         driver.status = "pending";
-    //         reassignBookingToOtherDrivers();
-    //     }
-    // }
 }
 
 // function handleCustomerMessage(ws: WebSocket, data: { event: string, userUid?: string }) {
@@ -339,7 +329,9 @@ async function reassignBookingToOtherDrivers() {
                 booking.status = "assigned";
                 booking.assignedDriver = suitableDriver;
                 suitableDriver.status = "assigned";
-                suitableDriver.ws.send(JSON.stringify({ event: "newBooking", bookingId: booking.bookingId, timeOut: TIMEOUT_DURATION }));
+                suitableDriver.ws.send(
+                    JSON.stringify({ event: "newBooking", bookingId: booking.bookingId, timeOut: TIMEOUT_DURATION })
+                );
 
                 booking.timeout = setTimeout(() => {
                     handleDriverTimeout(booking);
@@ -398,5 +390,3 @@ function updateBookingWS(bookingId: string, lat: number, lng: number) {
 }
 
 export { wss, BookingWS, addBookingToQueue, updateBookingWS };
-
-

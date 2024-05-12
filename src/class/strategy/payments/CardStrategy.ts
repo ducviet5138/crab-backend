@@ -8,7 +8,7 @@ export class CardStrategy implements IPaymentStrategy {
         const driverInstance = await User.findById(driver);
         const transaction = new Transaction({
             ref: "PMT" + generateTrans(),
-            amount: amount,
+            amount: amount * 0.8,
             type: "PAYMENT",
             wallet: driverInstance.cash_wallet,
         });
