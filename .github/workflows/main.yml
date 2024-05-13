@@ -2,6 +2,7 @@ on:
     push:
         branches:
             - "CRAB-*"
+            - "main"
     pull_request:
         branches:
             - "main"
