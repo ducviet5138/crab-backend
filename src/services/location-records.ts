@@ -189,6 +189,7 @@ class LocationRecordsService {
                     updateBookingWS(booking._id.toString(), pLat, pLong);
                     // Update fee to BookingInfo
                     it.fee = fee;
+                    it.distance = distance;
                     await it.save();
                     ++totalUpdatedDocuments;
                 }
