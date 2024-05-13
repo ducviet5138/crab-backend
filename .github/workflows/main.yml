@@ -22,6 +22,6 @@ jobs:
                   echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
                   ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
             - name: connect and pull
-              run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i "~/.ssh/id_rsa" "killall node & cd /home/ubuntu/mobile/crab-backend && git fetch --all && git checkout ${{ github.head_ref || github.ref_name }} && git reset --hard && git pull && npm install --verbose && sudo sed -i 's/mongodb:\/\/127.0.0.1:27017\/crab/mongodb+srv:\/\/ngwx:1@csc13008.kl92ifp.mongodb.net\/?retryWrites=true\&w=majority\&appName=CSC13008/g'  ~/mobile/crab-backend/src/app-data-src.ts &&(nohup npm start > /dev/null 2>&1 &) && exit"
+              run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i "~/.ssh/id_rsa" "killall node & cd /home/ubuntu/mobile/crab-backend && git fetch --all && git checkout -f ${{ github.head_ref || github.ref_name }} && git reset --hard && git pull && npm install --verbose && sudo sed -i 's/mongodb:\/\/127.0.0.1:27017\/crab/mongodb+srv:\/\/ngwx:1@csc13008.kl92ifp.mongodb.net\/?retryWrites=true\&w=majority\&appName=CSC13008/g'  ~/mobile/crab-backend/src/app-data-src.ts &&(nohup npm start > /dev/null 2>&1 &) && exit"
             - name: cleanup
               run: rm -rf ~/.ssh
